@@ -1,15 +1,15 @@
 <!-- Config Node -->
 <script type="text/javascript">
-	RED.nodes.registerType("obs-instance", {
+    RED.nodes.registerType("obs-instance", {
         category: "config",
         defaults: {
-			name: {value: ""},
+            name: {value: ""},
             host: {value: "localhost", required: true},
             port: {value: 4444, required: true, validate: RED.validators.number()}
         },
-		credentials: {
-			password: {type: "password"}
-		},
+        credentials: {
+            password: {type: "password"}
+        },
         label: function() {
             return this.name || `ws://${this.host}:${this.port}`;
         }
@@ -25,11 +25,11 @@
         <label for="node-config-input-port"><i class="fa fa-globe"></i> Port</label>
         <input type="text" id="node-config-input-port">
     </div>
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-config-input-password"><i class="fa fa-key"></i> Password</label>
         <input type="password" id="node-config-input-password" placeholder="(optional)">
     </div>
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-config-input-name" placeholder="Name">
     </div>
@@ -43,58 +43,58 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-			event: {value: "SwitchScenes", required: true},
-			obsInstance: {type: "obs-instance", required: true}
+            event: {value: "SwitchScenes", required: true},
+            obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 0,
-		outputs: 1,
+        outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
             return this.name||"obs-event";
         },
-		oneditprepare: function() {
-			websocketEventTypes.forEach(function (item) {
-				$("#node-input-event").append($("<option>", {value: item, text: item}));
-			});
-			$("#node-input-event").val(this.event || websocketEventTypes[0]);
-		}
+        oneditprepare: function() {
+            websocketEventTypes.forEach(function (item) {
+                $("#node-input-event").append($("<option>", {value: item, text: item}));
+            });
+            $("#node-input-event").val(this.event || websocketEventTypes[0]);
+        }
     });
-	
-	const websocketEventTypes = [
-		"SwitchScenes", "ScenesChanged",
-		"SceneCollectionChanged", "SceneCollectionListChanged",
-		"SwitchTransition", "TransitionListChanged",
-		"TransitionDurationChanged", "TransitionBegin",
-		"TransitionEnd", "TransitionVideoEnd",
-		"ProfileChanged", "ProfileListChanged",
-		"StreamStarting", "StreamStarted",
-		"StreamStopping", "StreamStopped",
-		"StreamStatus", "RecordingStarting",
-		"RecordingStopping", "RecordingStopped",
-		"RecordingPaused", "RecordingResumed",
-		"ReplayStarting", "ReplayStarted",
-		"ReplayStopping", "ReplayStopped",
-		"Exiting", "BroadcastCustomMessage",
-		"SourceCreated", "SourceDestroyed",
-		"SourceVolumeChanged", "SourceMuteStateChanged",
-		"SourceAudioSyncOffsetChanged", "SourceAudioMixersChanged",
-		"SourceRenamed", "SourceFilterAdded",
-		"SourceFilterRemoved", "SourceFilterVisibilityChanged",
-		"SourceFiltersReordered", "SourceOrderChanged",
-		"SceneItemAdded", "SceneItemRemoved",
-		"SceneItemVisibilityChanged", "SceneItemLockChanged",
-		"SceneItemTransformChanged", "SceneItemSelected",
-		"SceneItemDeselected", "PreviewSceneChanged",
-		"StudioModeSwitched"
-	];
+    
+    const websocketEventTypes = [
+        "SwitchScenes", "ScenesChanged",
+        "SceneCollectionChanged", "SceneCollectionListChanged",
+        "SwitchTransition", "TransitionListChanged",
+        "TransitionDurationChanged", "TransitionBegin",
+        "TransitionEnd", "TransitionVideoEnd",
+        "ProfileChanged", "ProfileListChanged",
+        "StreamStarting", "StreamStarted",
+        "StreamStopping", "StreamStopped",
+        "StreamStatus", "RecordingStarting",
+        "RecordingStopping", "RecordingStopped",
+        "RecordingPaused", "RecordingResumed",
+        "ReplayStarting", "ReplayStarted",
+        "ReplayStopping", "ReplayStopped",
+        "Exiting", "BroadcastCustomMessage",
+        "SourceCreated", "SourceDestroyed",
+        "SourceVolumeChanged", "SourceMuteStateChanged",
+        "SourceAudioSyncOffsetChanged", "SourceAudioMixersChanged",
+        "SourceRenamed", "SourceFilterAdded",
+        "SourceFilterRemoved", "SourceFilterVisibilityChanged",
+        "SourceFiltersReordered", "SourceOrderChanged",
+        "SceneItemAdded", "SceneItemRemoved",
+        "SceneItemVisibilityChanged", "SceneItemLockChanged",
+        "SceneItemTransformChanged", "SceneItemSelected",
+        "SceneItemDeselected", "PreviewSceneChanged",
+        "StudioModeSwitched"
+    ];
 </script>
 
 <script type="text/html" data-template-name="obs-event">
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-event">Event</label>
         <select id="node-input-event"></select>
     </div>
@@ -105,21 +105,21 @@
 </script>
 
 <script type="text/html" data-help-name="obs-event">
-	<p>This node outputs messages based on the selected event type</p>
-	<h3>Outputs</h3>
-	<ol class="node-ports">
-		<li>event output
-			<dl class="message-properties">
-				<dt>payload <span class="property-type">object</span></dt>
-				<dd>the event object as emitted by obs-websocket</dd>
-			</dl>
-		</li>
-	</ol>
-	<h3>References</h3>
-	<ul>
-		<li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
-		<li><a href="https://github.com/lebaston100/">GitHub</a> - the nodes github repository</li>
-	</ul>
+    <p>This node outputs messages based on the selected event type</p>
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>event output
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>the event object as emitted by obs-websocket</dd>
+            </dl>
+        </li>
+    </ol>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
+        <li><a href="https://github.com/lebaston100/">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
 <!-- END obs-event -->
 
@@ -130,10 +130,10 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-			obsInstance: {type: "obs-instance", required: true}
+            obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 0,
-		outputs: 1,
+        outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
             return this.name||"obs-heartbeat";
@@ -142,7 +142,7 @@
 </script>
 
 <script type="text/html" data-template-name="obs-heartbeat">
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
@@ -153,21 +153,21 @@
 </script>
 
 <script type="text/html" data-help-name="obs-heartbeat">
-	<p>This node outputs messages based on the selected event type</p>
-	<h3>Outputs</h3>
-	<ol class="node-ports">
-		<li>event output
-			<dl class="message-properties">
-				<dt>payload <span class="property-type">object</span></dt>
-				<dd>the event object as emitted by obs-websocket</dd>
-			</dl>
-		</li>
-	</ol>
-	<h3>References</h3>
-	<ul>
-		<li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
-		<li><a href="https://github.com/lebaston100/">GitHub</a> - the nodes github repository</li>
-	</ul>
+    <p>This node outputs messages based on the selected event type</p>
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>event output
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>the event object as emitted by obs-websocket</dd>
+            </dl>
+        </li>
+    </ol>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
+        <li><a href="https://github.com/lebaston100/">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
 <!-- END obs-heartbeat -->
 
@@ -178,7 +178,7 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-			obsInstance: {type: "obs-instance", required: true}
+            obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 0,
         outputs: 1,
@@ -187,11 +187,11 @@
             return this.name||"obs-connection-status";
         }
     });
-	
+    
 </script>
 
 <script type="text/html" data-template-name="obs-connection-status">
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
@@ -213,8 +213,8 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-			request: {value: "GetVersion", required: true},
-			obsInstance: {type: "obs-instance", required: true}
+            request: {value: "GetVersion", required: true},
+            obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
         outputs: 1,
@@ -222,43 +222,43 @@
         label: function() {
             return this.name||"obs-request-without-data";
         },
-		oneditprepare: function() {
-			websocketRequestTypes.forEach(function (item) {
-				$("#node-input-request").append($("<option>", {value: item, text: item}));
-			});
-			$("#node-input-request").val(this.request || websocketRequestTypes[0]);
-		}
-	});
-	
-	const websocketRequestTypes = [
-		"GetVersion", "GetAuthRequired",
-		"GetFilenameFormatting", "GetStats",
-		"GetVideoInfo", "ListOutputs",
-		"GetCurrentProfile", "ListProfiles",
-		"StartStopRecording", "StartRecording",
-		"StopRecording", "PauseRecording",
-		"ResumeRecording", "StartStopReplayBuffer",
-		"StartReplayBuffer", "StopReplayBuffer",
-		"SaveReplayBuffer", "GetCurrentSceneCollection",
-		"ListSceneCollections", "GetCurrentScene",
-		"GetSceneList", "GetSourcesList",
-		"GetSourceTypesList", "GetSpecialSources",
-		"GetStreamingStatus", "StartStopStreaming",
-		"StopStreaming", "GetStreamSettings",
-		"SaveStreamSettings", "GetStudioModeStatus",
-		"GetPreviewScene", "EnableStudioMode",
-		"DisableStudioMode", "ToggleStudioMode",
-		"GetTransitionList", "GetCurrentTransition",
-		"GetTransitionDuration"
-	];
+        oneditprepare: function() {
+            websocketRequestTypes.forEach(function (item) {
+                $("#node-input-request").append($("<option>", {value: item, text: item}));
+            });
+            $("#node-input-request").val(this.request || websocketRequestTypes[0]);
+        }
+    });
+    
+    const websocketRequestTypes = [
+        "GetVersion", "GetAuthRequired",
+        "GetFilenameFormatting", "GetStats",
+        "GetVideoInfo", "ListOutputs",
+        "GetCurrentProfile", "ListProfiles",
+        "StartStopRecording", "StartRecording",
+        "StopRecording", "PauseRecording",
+        "ResumeRecording", "StartStopReplayBuffer",
+        "StartReplayBuffer", "StopReplayBuffer",
+        "SaveReplayBuffer", "GetCurrentSceneCollection",
+        "ListSceneCollections", "GetCurrentScene",
+        "GetSceneList", "GetSourcesList",
+        "GetSourceTypesList", "GetSpecialSources",
+        "GetStreamingStatus", "StartStopStreaming",
+        "StopStreaming", "GetStreamSettings",
+        "SaveStreamSettings", "GetStudioModeStatus",
+        "GetPreviewScene", "EnableStudioMode",
+        "DisableStudioMode", "ToggleStudioMode",
+        "GetTransitionList", "GetCurrentTransition",
+        "GetTransitionDuration"
+    ];
 </script>
 
 <script type="text/html" data-template-name="obs-no-req-data-request">
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-request">Request</label>
         <select id="node-input-request"></select>
     </div>
@@ -280,36 +280,36 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-			payload: {value:"", required: true, validate: RED.validators.typedInput("payloadType")},
+            payload: {value:"", required: true, validate: RED.validators.typedInput("payloadType")},
             payloadType: {value:"payload"},
-			obsInstance: {type: "obs-instance", required: true}
+            obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
         outputs: 2,
-		icon: "font-awesome/fa-cogs",
-		outputLabels: ["success","error"],
+        icon: "font-awesome/fa-cogs",
+        outputLabels: ["success","error"],
         label: function() {
             return this.name||"obs-raw-request";
         },
-		oneditprepare: function() {
-			if (this.payload == "") {
+        oneditprepare: function() {
+            if (this.payload == "") {
                 $("#node-input-payload").val("payload");
             }
-			$("#node-input-payload").typedInput({
-				default: "msg",
-				typeField: $("#node-input-payloadType"),
-				types: ["msg","flow","global", "json"]
-			});
-		}
-	});
+            $("#node-input-payload").typedInput({
+                default: "msg",
+                typeField: $("#node-input-payloadType"),
+                types: ["msg","flow","global", "json"]
+            });
+        }
+    });
 </script>
 
 <script type="text/html" data-template-name="obs-raw-request">
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-payload">Request Source</label>
         <input type="text" id="node-input-payload" style="width:70%">
         <input type="hidden" id="node-input-payloadType">
@@ -332,9 +332,9 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-			scene: {value: "", required: false, validate: RED.validators.typedInput("sceneType")},
-			sceneType: {value: "Scene"},
-			obsInstance: {type: "obs-instance", required: true}
+            scene: {value: "", required: false, validate: RED.validators.typedInput("sceneType")},
+            sceneType: {value: "Scene"},
+            obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
         outputs: 1,
@@ -342,46 +342,46 @@
         label: function() {
             return this.name||"SetCurrentScene";
         },
-		oneditprepare: function() {
-			let id = this.id;
-			$.getJSON(`/nr-contrib-obs-ws/getconfignodeid/${id}`, (d1, status) => {
-				$.getJSON(`/nr-contrib-obs-ws/${d1.id}/list/scenes`, (d2) => {
-					let optionsArray = [];
-					d2.scenes.forEach((o) => {
-						optionsArray.push(o.name);
-					});
-					var scenesTypeDefinition = {
-						value: "sceneName",
-						label: "Scene",
-						hasValue: false,
-						icon: "red/images/typedInput/bool.png",
-						options: optionsArray
-					};
-					$("#node-input-scene").typedInput({
-						default: "sceneName",
-						typeField: $("#node-input-sceneType"),
-						types: [scenesTypeDefinition, "str", "msg","flow","global"]
-					});
-				});
-			}).fail((data) => {
-				$("#node-input-scene").typedInput({
-					types: [{label: "PLEASE REDEPLOY!"}]
-				});
-			});
-		}
+        oneditprepare: function() {
+            let id = this.id;
+            $.getJSON(`/nr-contrib-obs-ws/getconfignodeid/${id}`, (d1, status) => {
+                $.getJSON(`/nr-contrib-obs-ws/${d1.id}/list/scenes`, (d2) => {
+                    let optionsArray = [];
+                    d2.scenes.forEach((o) => {
+                        optionsArray.push(o.name);
+                    });
+                    var scenesTypeDefinition = {
+                        value: "sceneName",
+                        label: "Scene",
+                        hasValue: false,
+                        icon: "red/images/typedInput/bool.png",
+                        options: optionsArray
+                    };
+                    $("#node-input-scene").typedInput({
+                        default: "sceneName",
+                        typeField: $("#node-input-sceneType"),
+                        types: [scenesTypeDefinition, "str", "msg","flow","global"]
+                    });
+                });
+            }).fail((data) => {
+                $("#node-input-scene").typedInput({
+                    types: [{label: "PLEASE REDEPLOY!"}]
+                });
+            });
+        }
     });
 </script>
 
 <script type="text/html" data-template-name="SetCurrentScene">
-	<div class="form-row">
+    <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
-	<div class="form-row">
-		<label for="node-input-scene">Scene Name</label>
-		<input type="text" id="node-input-scene" style="width:70%">
-		<input type="hidden" id="node-input-sceneType">
-	</div>
+    <div class="form-row">
+        <label for="node-input-scene">Scene Name</label>
+        <input type="text" id="node-input-scene" style="width:70%">
+        <input type="hidden" id="node-input-sceneType">
+    </div>
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
@@ -400,11 +400,11 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-			transition: {value: "", required: false, validate: RED.validators.typedInput("transitionType")},
-			transitionType: {value: "none"},
-			transitionTime: {value: "0", required: false, validate: RED.validators.typedInput("transitionTimeType")},
-			transitionTimeType: {value: "none"},
-			obsInstance: {type: "obs-instance", required: true}
+            transition: {value: "", required: false, validate: RED.validators.typedInput("transitionType")},
+            transitionType: {value: "none"},
+            transitionTime: {value: "0", required: false, validate: RED.validators.typedInput("transitionTimeType")},
+            transitionTimeType: {value: "none"},
+            obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
         outputs: 1,
@@ -412,73 +412,84 @@
         label: function() {
             return this.name||"TransitionToProgram";
         },
-		oneditprepare: function() {
-			var noneTypeDefinition = {
-				value: "none",
-				label: "None",
-				hasValue: false,
-				icon: "red/images/typedInput/bool.png"
-			};
+        oneditprepare: function() {
+            let id = this.id;
+            let transitionTypedInputObj = {};
 
-			let id = this.id;
-			console.log(this);
-			$.getJSON(`/nr-contrib-obs-ws/getconfignodeid/${id}`, (d1) => {
-				$.getJSON(`/nr-contrib-obs-ws/${d1.id}/list/transitions`, (d2) => {
-					let optionsArray = [];
-					d2.transitions.forEach((o) => {
-						optionsArray.push(o.name);
-					});
-					var transitionTypeDefinition = {
-						value: "transition",
-						label: "Transition",
-						hasValue: false,
-						icon: "red/images/typedInput/bool.png",
-						options: optionsArray
-					};
-					$("#node-input-transition").typedInput({
-						default: "none",
-						typeField: $("#node-input-transitionType"),
-						types: [noneTypeDefinition, transitionTypeDefinition, "str", "msg", "flow", "global"]
-					});
-				});
-			}).fail((data) => { //Handle not reaching the http endpoint to get the master node id
-				$("#node-input-transition").typedInput({
-					types: [{label: "PLEASE REDEPLOY!"}]
-				});
-			});
+            let noneTypeDefinition = {
+                value: "none",
+                label: "None",
+                hasValue: false,
+                icon: "red/images/typedInput/bool.png"
+            };
+            
+            console.log(this);
+            $.getJSON(`/nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (d1) => {
+                //console.log("Success. Data:");
+                //console.log(d1);
 
-			$("#node-input-transitionTime").typedInput({
-				default: "none",
-				typeField: $("#node-input-transitionTimeType"),
-				types: [noneTypeDefinition, "num", "msg", "flow", "global"]
-			});
+                let transitionOptionsArray = [];
+                d1.transitions.forEach((o) => {
+                    transitionOptionsArray.push(o.name);
+                });
+                //console.log(transitionOptionsArray);
+                var transitionTypeDefinition = {
+                    value: "transition",
+                    label: "Transition",
+                    hasValue: false,
+                    icon: "red/images/typedInput/bool.png",
+                    options: transitionOptionsArray
+                };
+                transitionTypedInputObj = {
+                    default: "none",
+                    typeField: $("#node-input-transitionType"),
+                    types: [noneTypeDefinition, transitionTypeDefinition, "str", "msg", "flow", "global"]
+                }
+            }).fail((data) => { //Handle not reaching the http endpoint
+                console.log("Fail");
+                transitionTypedInputObj = {
+                    types: [{label: "PLEASE REDEPLOY!", hasValue: false}]
+                };
+            }).always(() => {
+                //console.log("Creating typedInput");
+                console.log(transitionTypedInputObj);
+                $("#node-input-transition").typedInput(transitionTypedInputObj);
+            });
 
-			$("#node-input-transition").on('change', function(type, value) {
-				if (value == "none") {
-					$("#ttp-transistionTime").hide();
-				} else {
-					$("#ttp-transistionTime").show();
-				}
-			});
-		}
+            $("#node-input-transitionTime").typedInput({
+                default: "none",
+                typeField: $("#node-input-transitionTimeType"),
+                types: [noneTypeDefinition, "num", "msg", "flow", "global"]
+            });
+
+            $("#node-input-transition").on('change', function(type, value) {
+                console.log(value);
+                if (value == "none") {
+                    $("#ttp-transistionTime").hide();
+                } else {
+                    $("#ttp-transistionTime").show();
+                }
+            });
+        }
     });
 </script>
 
 <script type="text/html" data-template-name="TransitionToProgram">
-	<div class="form-row">
+    <div class="form-row" style="color:red;display:none;" id="ttp-offlinemessage">Not connected to obs!</div>
+    <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
-	<div class="form-row">
-		<label for="node-input-transition">Transition</label>
-		<input type="text" id="node-input-transition" style="width:70%">
-		<input type="hidden" id="node-input-transitionType">
-	</div>
-	<div class="form-row" id="ttp-transistionTime">
-		<label for="node-input-transition">Transition Time</label>
-		<input type="text" id="node-input-transitionTime" style="width:70%">
-		<input type="hidden" id="node-input-transitionTimeType">
-	</div>
+    <div class="form-row">
+        <label for="node-input-transition">Transition</label>
+        <input type="text" id="node-input-transition" style="width:70%">
+        <input type="hidden" id="node-input-transitionType">
+    </div>
+    <div class="form-row" id="ttp-transistionTime">
+        <label for="node-input-transition">Transition Time</label>
+        <input type="text" id="node-input-transitionTime" style="width:70%">
+        <input type="hidden" id="node-input-transitionTimeType">
+    </div>
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
