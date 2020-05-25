@@ -120,13 +120,14 @@ module.exports = function(RED) {
             node.obs.send(request).then(data => {
                 res.json(data);
             }).catch(err => {
-                node.error(err);
-                res.json([{}]);
+                node.error(JSON.stringify(err));
+                //res.json([]);
+                res.sendStatus(503);
             });
         }
     }
 
-    RED.nodes.registerType("obs-instance", WebsocketClientNode,{
+    RED.nodes.registerType("obs-instance", WebsocketClientNode, {
         credentials: {
             password: {type: "password"}
         }
@@ -320,9 +321,6 @@ module.exports = function(RED) {
 
                 if (done) done();
             });
-            RED.httpAdmin.get(`/nr-contrib-obs-ws/getconfignodeid/${node.id}`, function(req, res, next) {
-                res.json({id: node.instance.id});
-            });
         }
     }
 
@@ -344,7 +342,6 @@ module.exports = function(RED) {
                 console.log("----------------------");
                 
                 let transitionData = {};
-                //Parse transition name
                 if (config.transitionType == "msg" || config.transitionType == "flow" || config.transitionType == "global") {
                     RED.util.evaluateNodeProperty(config.transition, config.sceneType, this, msg, function(err,res) {
                         if (!err && typeof res !== "undefined") {
@@ -376,10 +373,7 @@ module.exports = function(RED) {
                 });
                 node.debug(`Transition: ${JSON.stringify(transitionData)}`);
                 if (done) done();
-            });
-            RED.httpAdmin.get(`/nr-contrib-obs-ws/getconfignodeid/${node.id}`, function(req, res, next) {
-                res.json({id: node.instance.id});
-            });
+            })
         }
     }
 

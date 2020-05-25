@@ -413,46 +413,39 @@
             return this.name||"TransitionToProgram";
         },
         oneditprepare: function() {
-            let id = this.id;
-            let transitionTypedInputObj = {};
-
             let noneTypeDefinition = {
                 value: "none",
                 label: "None",
                 hasValue: false,
                 icon: "red/images/typedInput/bool.png"
             };
-            
-            console.log(this);
-            $.getJSON(`/nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (d1) => {
-                //console.log("Success. Data:");
-                //console.log(d1);
+            let transitionTypedInputObj = {
+                default: "none",
+                typeField: $("#node-input-transitionType"),
+                types: [noneTypeDefinition, "str", "msg", "flow", "global"]
+            };
 
-                let transitionOptionsArray = [];
-                d1.transitions.forEach((o) => {
-                    transitionOptionsArray.push(o.name);
+            console.log("this", this);
+            $("#ttp-offlinemessage").hide();
+            $.getJSON(`/nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (data) => {
+                console.log("Success. Data:", data, this.obsInstance);
+                let transitionOptions = [];
+                data.transitions.forEach((o) => {
+                    transitionOptions.push(o.name);
                 });
-                //console.log(transitionOptionsArray);
-                var transitionTypeDefinition = {
+                var transitionTypeDef = {
                     value: "transition",
                     label: "Transition",
                     hasValue: false,
                     icon: "red/images/typedInput/bool.png",
-                    options: transitionOptionsArray
+                    options: transitionOptions
                 };
-                transitionTypedInputObj = {
-                    default: "none",
-                    typeField: $("#node-input-transitionType"),
-                    types: [noneTypeDefinition, transitionTypeDefinition, "str", "msg", "flow", "global"]
-                }
-            }).fail((data) => { //Handle not reaching the http endpoint
+                transitionTypedInputObj.types.splice(1, 0, transitionTypeDef);
+            }).fail(() => { //503 = obs not connected
                 console.log("Fail");
-                transitionTypedInputObj = {
-                    types: [{label: "PLEASE REDEPLOY!", hasValue: false}]
-                };
+                $("#ttp-offlinemessage").show();
             }).always(() => {
-                //console.log("Creating typedInput");
-                console.log(transitionTypedInputObj);
+                console.log("tdobj", transitionTypedInputObj);
                 $("#node-input-transition").typedInput(transitionTypedInputObj);
             });
 
@@ -462,13 +455,9 @@
                 types: [noneTypeDefinition, "num", "msg", "flow", "global"]
             });
 
-            $("#node-input-transition").on('change', function(type, value) {
-                console.log(value);
-                if (value == "none") {
-                    $("#ttp-transistionTime").hide();
-                } else {
-                    $("#ttp-transistionTime").show();
-                }
+            $("#node-input-transition").on('change', (type, value) => {
+                console.log("transition", value);
+                value == "none" ? $("#ttp-transistionTime").hide() : $("#ttp-transistionTime").show();
             });
         }
     });
