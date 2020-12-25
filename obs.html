@@ -70,6 +70,7 @@
         "StreamStarting", "StreamStarted",
         "StreamStopping", "StreamStopped",
         "StreamStatus", "RecordingStarting",
+        "RecordingStarted",
         "RecordingStopping", "RecordingStopped",
         "RecordingPaused", "RecordingResumed",
         "ReplayStarting", "ReplayStarted",
@@ -77,10 +78,15 @@
         "Exiting", "BroadcastCustomMessage",
         "SourceCreated", "SourceDestroyed",
         "SourceVolumeChanged", "SourceMuteStateChanged",
+        "SourceAudioDeactivated", "SourceAudioActivated",
         "SourceAudioSyncOffsetChanged", "SourceAudioMixersChanged",
         "SourceRenamed", "SourceFilterAdded",
         "SourceFilterRemoved", "SourceFilterVisibilityChanged",
-        "SourceFiltersReordered", "SourceOrderChanged",
+        "SourceFiltersReordered", "MediaPlaying",
+        "MediaPaused", "MediaRestarted",
+        "MediaStopped", "MediaNext",
+        "MediaPrevious", "MediaStarted",
+        "MediaEnded", "SourceOrderChanged",
         "SceneItemAdded", "SceneItemRemoved",
         "SceneItemVisibilityChanged", "SceneItemLockChanged",
         "SceneItemTransformChanged", "SceneItemSelected",
@@ -118,7 +124,7 @@
     <h3>References</h3>
     <ul>
         <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
-        <li><a href="https://github.com/lebaston100/">GitHub</a> - the nodes github repository</li>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
 <!-- END obs-event -->
@@ -166,7 +172,7 @@
     <h3>References</h3>
     <ul>
         <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
-        <li><a href="https://github.com/lebaston100/">GitHub</a> - the nodes github repository</li>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
 <!-- END obs-heartbeat -->
@@ -232,24 +238,66 @@
     
     const websocketRequestTypes = [
         "GetVersion", "GetAuthRequired",
-        "GetFilenameFormatting", "GetStats",
-        "GetVideoInfo", "ListOutputs",
+        "SetFilenameFormatting", "GetFilenameFormatting",
+        "GetStats", "BroadcastCustomMessage",
+        "GetVideoInfo", "OpenProjector", 
+        "TriggerHotkeyByName", "TriggerHotkeyBySequence",
+        "PlayPauseMedia", "RestartMedia",
+        "StopMedia", "NextMedia",
+        "PreviousMedia", "GetMediaDuration",
+        "GetMediaTime", "SetMediaTime",
+        "ScrubMedia", "GetMediaState",
+        "GetMediaSourcesList", "CreateSource",
+        "GetSourcesList", "GetSourceTypesList",
+        "GetVolume", "SetVolume",
+        "GetMute", "SetMute",
+        "ToggleMute", "GetAudioActive",
+        "SetSourceName", "SetSyncOffset",
+        "GetSyncOffset", "GetSourceSettings",
+        "SetSourceSettings", "GetTextGDIPlusProperties",
+        "SetTextGDIPlusProperties", "GetTextFreetype2Properties",
+        "SetTextFreetype2Properties", "GetBrowserSourceProperties",
+        "SetBrowserSourceProperties", "GetSpecialSources",
+        "GetSourceFilters", "GetSourceFilterInfo",
+        "AddFilterToSource", "RemoveFilterFromSource",
+        "ReorderSourceFilter", "MoveSourceFilter",
+        "SetSourceFilterSettings", "SetSourceFilterVisibility",
+        "GetAudioMonitorType", "SetAudioMonitorType",
+        "TakeSourceScreenshot", "ListOutputs",
+        "GetOutputInfo", "StartOutput",
+        "StopOutput", "SetCurrentProfile",
         "GetCurrentProfile", "ListProfiles",
+        "GetRecordingStatus", 
         "StartStopRecording", "StartRecording",
         "StopRecording", "PauseRecording",
-        "ResumeRecording", "StartStopReplayBuffer",
-        "StartReplayBuffer", "StopReplayBuffer",
-        "SaveReplayBuffer", "GetCurrentSceneCollection",
-        "ListSceneCollections", "GetCurrentScene",
-        "GetSceneList", "GetSourcesList",
-        "GetSourceTypesList", "GetSpecialSources",
+        "ResumeRecording", "SetRecordingFolder",
+        "GetRecordingFolder", "GetReplayBufferStatus",
+        "StartStopReplayBuffer", "StartReplayBuffer",
+        "StopReplayBuffer", "SaveReplayBuffer",
+        "SetCurrentSceneCollection", "GetCurrentSceneCollection",
+        "ListSceneCollections", "GetSceneItemList",
+        "GetSceneItemProperties", "SetSceneItemProperties",
+        "ResetSceneItem", "SetSceneItemRender",
+        "SetSceneItemPosition", "SetSceneItemTransform",
+        "SetSceneItemCrop", "DeleteSceneItem",
+        "AddSceneItem", "DuplicateSceneItem",
+        "SetCurrentScene", "GetCurrentScene",
+        "GetSceneList", "CreateScene",
+        "ReorderSceneItems", "SetSceneTransitionOverride",
+        "RemoveSceneTransitionOverride", "GetSceneTransitionOverride",
         "GetStreamingStatus", "StartStopStreaming",
-        "StopStreaming", "GetStreamSettings",
-        "SaveStreamSettings", "GetStudioModeStatus",
-        "GetPreviewScene", "EnableStudioMode",
-        "DisableStudioMode", "ToggleStudioMode",
-        "GetTransitionList", "GetCurrentTransition",
-        "GetTransitionDuration"
+        "StartStreaming", "StopStreaming", 
+        "SetStreamSettings", "GetStreamSettings",
+        "SaveStreamSettings", "SendCaptions",
+        "GetStudioModeStatus", "GetPreviewScene",
+        "SetPreviewScene", "TransitionToProgram",
+        "EnableStudioMode", "DisableStudioMode",
+        "ToggleStudioMode", "GetTransitionList",
+        "GetCurrentTransition", "SetCurrentTransition",
+        "SetTransitionDuration", "GetTransitionDuration",
+        "GetTransitionPosition", "GetTransitionSettings",
+        "SetTransitionSettings", "ReleaseTBar",
+        "SetTBarPosition"
     ];
 </script>
 
@@ -343,36 +391,39 @@
             return this.name||"SetCurrentScene";
         },
         oneditprepare: function() {
-            let id = this.id;
-            $.getJSON(`/nr-contrib-obs-ws/getconfignodeid/${id}`, (d1, status) => {
-                $.getJSON(`/nr-contrib-obs-ws/${d1.id}/list/scenes`, (d2) => {
-                    let optionsArray = [];
-                    d2.scenes.forEach((o) => {
-                        optionsArray.push(o.name);
-                    });
-                    var scenesTypeDefinition = {
-                        value: "sceneName",
-                        label: "Scene",
-                        hasValue: false,
-                        icon: "red/images/typedInput/bool.png",
-                        options: optionsArray
-                    };
-                    $("#node-input-scene").typedInput({
-                        default: "sceneName",
-                        typeField: $("#node-input-sceneType"),
-                        types: [scenesTypeDefinition, "str", "msg","flow","global"]
-                    });
+            console.log("this", this);
+            let sceneTypedInputObj = {
+                default: "sceneName",
+                typeField: $("#node-input-sceneType"),
+                types: ["str", "msg","flow","global"]
+            }
+            $("#ttp-offlinemessage").hide();
+            $.getJSON(`/nr-contrib-obs-ws/${this.obsInstance}/list/scenes`, (data) => {
+                let optionsArray = [];
+                data.scenes.forEach((o) => {
+                    optionsArray.push(o.name);
                 });
-            }).fail((data) => {
-                $("#node-input-scene").typedInput({
-                    types: [{label: "PLEASE REDEPLOY!"}]
-                });
+                var scenesTypeDefinition = {
+                    value: "sceneName",
+                    label: "Scene",
+                    hasValue: false,
+                    icon: "red/images/typedInput/bool.png",
+                    options: optionsArray
+                };
+                sceneTypedInputObj.types.splice(0, 0, scenesTypeDefinition);
+            }).fail(() => { //503 = obs not connected
+                console.log("Fail");
+                $("#ttp-offlinemessage").show();
+            }).always(() => {
+                console.log("tdobj", sceneTypedInputObj);
+                $("#node-input-scene").typedInput(sceneTypedInputObj);
             });
         }
     });
 </script>
 
 <script type="text/html" data-template-name="SetCurrentScene">
+    <div class="form-row" style="color:red;display:none;" id="ttp-offlinemessage">Not connected to obs!</div>
     <div class="form-row">
         <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
@@ -452,7 +503,7 @@
             $("#node-input-transitionTime").typedInput({
                 default: "none",
                 typeField: $("#node-input-transitionTimeType"),
-                types: [noneTypeDefinition, "num", "msg", "flow", "global"]
+                types: [noneTypeDefinition, "num", "msg", "flow", "global", "jsonata"]
             });
 
             $("#node-input-transition").on('change', (type, value) => {

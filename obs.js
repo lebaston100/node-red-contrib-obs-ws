@@ -177,7 +177,6 @@ module.exports = function(RED) {
             this.warn("NO SERVER SPECIFIED");
         }
     }
-
     RED.nodes.registerType("obs-event", obs_event);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +201,6 @@ module.exports = function(RED) {
             node.warn("NO SERVER SPECIFIED");
         }
     }
-
     RED.nodes.registerType("obs-heartbeat", obs_heartbeat);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +227,6 @@ module.exports = function(RED) {
             node.status({fill:"grey", shape:"ring ", text:"No Server"});
         }
     }
-
     RED.nodes.registerType("obs-connection-status", obs_connection_status);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +246,6 @@ module.exports = function(RED) {
             });
         }
     }
-
     RED.nodes.registerType("obs-no-req-data-request", obs_no_req_data_request);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,7 +277,6 @@ module.exports = function(RED) {
             });
         }
     }
-
     RED.nodes.registerType("obs-raw-request", obs_raw_request);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,9 +288,7 @@ module.exports = function(RED) {
         if (node.instance) {
             node.on("input", function(msg, send, done) {
                 let dstScene = null;
-
                 node.warn(JSON.stringify(config));
-
                 if (config.sceneType == "msg" || config.sceneType == "flow" || config.sceneType == "global") {
                     RED.util.evaluateNodeProperty(config.scene, config.sceneType, this, msg, function(err,res) {
                         if (!err && typeof res !== "undefined") {
@@ -323,7 +316,6 @@ module.exports = function(RED) {
             });
         }
     }
-
     RED.nodes.registerType("SetCurrentScene", obs_SetCurrentScene);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -334,49 +326,64 @@ module.exports = function(RED) {
         node.instance = RED.nodes.getNode(config.obsInstance);
         if (node.instance) {
             node.on("input", function(msg, send, done) {
-                console.log("----------------------");
-                console.log(config.transitionType);
-                console.log(config.transition);
-                console.log(config.transitionTimeType);
-                console.log(config.transitionTime);
-                console.log("----------------------");
-                
-                let transitionData = {};
-                if (config.transitionType == "msg" || config.transitionType == "flow" || config.transitionType == "global") {
-                    RED.util.evaluateNodeProperty(config.transition, config.sceneType, this, msg, function(err,res) {
-                        if (!err && typeof res !== "undefined") {
-                            transitionData = {"with-transition": {"name": res}};
-                        } else {
-                            done(err);
-                        }
-                    });
-                } else if ((config.transitionType == "str" || config.transitionType == "transition") && config.transition !== null && config.transition !== "") {
-                    transitionData = {"with-transition": {"name": config.transition}};
-                }
-
-                if (config.transitionTimeType == "msg" || config.transitionTimeType == "flow" || config.transitionTimeType == "global") {
-                    RED.util.evaluateNodeProperty(config.transitionTime, config.transitionTimeType, this, msg, function(err,res) {
-                        if (!err && typeof res !== "undefined") {
-                            transitionData["with-transition"].duration = parseInt(res);
-                        } else {
-                            done(err);
-                        }
-                    });
-                } else if (config.transitionTimeType == "num") {
-                    transitionData["with-transition"].duration = parseInt(config.transitionTime);
-                }
-
+                console.log("Sending", transitionData);
                 node.instance.obs.send("TransitionToProgram", transitionData).then(data => {
+                    console.log("return", transitionData);
                     node.send({payload: removeKebabCases(data)});
                 }).catch(err => {
                     done(err);
                 });
                 node.debug(`Transition: ${JSON.stringify(transitionData)}`);
                 if (done) done();
-            })
+            });
         }
-    }
 
+        //REDO THIS PLZ
+
+        console.log("----------------------");
+        console.log(config.transitionType);
+        console.log(config.transition);
+        console.log(config.transitionTimeType);
+        console.log(config.transitionTime);
+        console.log("----------------------");
+        
+        let transitionData = {};
+        if (config.transitionType == "msg" || config.transitionType == "flow" || config.transitionType == "global") {
+            RED.util.evaluateNodeProperty(config.transition, config.sceneType, this, msg, function(err,res) {
+                if (!err && typeof res !== "undefined") {
+                    transitionData = {"with-transition": {"name": res}};
+                } else {
+                    node.error(err);
+                }
+            });
+        } else if ((config.transitionType == "str" || config.transitionType == "transition") && config.transition !== null && config.transition !== "") {
+            transitionData = {"with-transition": {"name": config.transition}};
+        }
+
+        if (config.transitionTimeType == "msg" || config.transitionTimeType == "flow" || config.transitionTimeType == "global") {
+            RED.util.evaluateNodeProperty(config.transitionTime, config.transitionTimeType, this, msg, function(err,res) {
+                if (!err && typeof res !== "undefined") {
+                    transitionData["with-transition"].duration = parseInt(res);
+                } else {
+                    node.error(err);
+                }
+            });
+        } else if (config.transitionTimeType == "num") {
+            transitionData["with-transition"].duration = parseInt(config.transitionTime);
+        } else if (config.transitionTimeType == "jsonata") {
+            try {
+                RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(config.transitionTime,this), msg, function(err, value) {
+                    console.log(parseInt(value));
+                    console.log("before", transitionData);
+                    transitionData["with-transition"].duration = parseInt(value);
+                    console.log("after", transitionData);
+                });
+            } catch (e) {
+                node.error(`Invalid JSONata expression: ${e.message}`);
+            }
+        }
+
+    }
     RED.nodes.registerType("TransitionToProgram", obs_TransitionToProgram);
 //////////////////////////////////////////////////////////////////////////////////////////////
     //Utils
