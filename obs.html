@@ -11,7 +11,7 @@
             password: {type: "password"}
         },
         label: function() {
-            return this.name || `ws://${this.host}:${this.port}`;
+            return this.name||`${this.host}:${this.port}`;
         }
     });
 </script>
@@ -30,15 +30,28 @@
         <input type="password" id="node-config-input-password" placeholder="(optional)">
     </div>
     <div class="form-row">
-        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-config-input-name" placeholder="Name">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name (optional)">
     </div>
+</script>
+
+<script type="text/html" data-help-name="obs-instance">
+    <h3>Details</h3>
+        <p>This node represents a single connection to the obs websocket server.</p>
+        <p><code>Host/IP</code> is the ip address or hostname of the device running obs.</p>
+        <p><code>Port</code> is the configured websocket port in the obs-websocket settings. Default is 4444.</p>
+        <p><code>Password</code> is the configured passwort in the obs-websocket settings. Leave empty if disabled.</p>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/Palakis/obs-websocket">obs-websocket</a> - GitHub project page</li>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
 <!-- END Config Node -->
 
-<!-- obs-event -->
+<!-- obs event -->
 <script type="text/javascript">
-    RED.nodes.registerType("obs-event", {
+    RED.nodes.registerType("obs event", {
         category: "obs",
         color: "#F3B567",
         defaults: {
@@ -50,54 +63,39 @@
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||"obs-event";
+            return this.name||"obs event";
         },
         oneditprepare: function() {
             websocketEventTypes.forEach(function (item) {
                 $("#node-input-event").append($("<option>", {value: item, text: item}));
             });
-            $("#node-input-event").val(this.event || websocketEventTypes[0]);
+            $("#node-input-event").val(this.event||websocketEventTypes[0]);
         }
     });
-    
+
     const websocketEventTypes = [
-        "SwitchScenes", "ScenesChanged",
-        "SceneCollectionChanged", "SceneCollectionListChanged",
-        "SwitchTransition", "TransitionListChanged",
-        "TransitionDurationChanged", "TransitionBegin",
-        "TransitionEnd", "TransitionVideoEnd",
-        "ProfileChanged", "ProfileListChanged",
-        "StreamStarting", "StreamStarted",
-        "StreamStopping", "StreamStopped",
-        "StreamStatus", "RecordingStarting",
-        "RecordingStarted",
-        "RecordingStopping", "RecordingStopped",
-        "RecordingPaused", "RecordingResumed",
-        "ReplayStarting", "ReplayStarted",
-        "ReplayStopping", "ReplayStopped",
-        "Exiting", "BroadcastCustomMessage",
-        "SourceCreated", "SourceDestroyed",
-        "SourceVolumeChanged", "SourceMuteStateChanged",
-        "SourceAudioDeactivated", "SourceAudioActivated",
-        "SourceAudioSyncOffsetChanged", "SourceAudioMixersChanged",
-        "SourceRenamed", "SourceFilterAdded",
-        "SourceFilterRemoved", "SourceFilterVisibilityChanged",
-        "SourceFiltersReordered", "MediaPlaying",
-        "MediaPaused", "MediaRestarted",
-        "MediaStopped", "MediaNext",
-        "MediaPrevious", "MediaStarted",
-        "MediaEnded", "SourceOrderChanged",
-        "SceneItemAdded", "SceneItemRemoved",
-        "SceneItemVisibilityChanged", "SceneItemLockChanged",
-        "SceneItemTransformChanged", "SceneItemSelected",
-        "SceneItemDeselected", "PreviewSceneChanged",
-        "StudioModeSwitched"
+        "SwitchScenes", "ScenesChanged", "SceneCollectionChanged", "SceneCollectionListChanged",
+        "SwitchTransition", "TransitionListChanged", "TransitionDurationChanged", "TransitionBegin",
+        "TransitionEnd", "TransitionVideoEnd", "ProfileChanged", "ProfileListChanged",
+        "StreamStarting", "StreamStarted", "StreamStopping", "StreamStopped",
+        "StreamStatus", "RecordingStarting", "RecordingStarted",
+        "RecordingStopping", "RecordingStopped", "RecordingPaused", "RecordingResumed",
+        "VirtualCamStarted", "VirtualCamStopped", "ReplayStarting", "ReplayStarted",
+        "ReplayStopping", "ReplayStopped", "Exiting", "BroadcastCustomMessage",
+        "SourceCreated", "SourceDestroyed", "SourceVolumeChanged", "SourceMuteStateChanged",
+        "SourceAudioDeactivated", "SourceAudioActivated", "SourceAudioSyncOffsetChanged", "SourceAudioMixersChanged",
+        "SourceRenamed", "SourceFilterAdded", "SourceFilterRemoved", "SourceFilterVisibilityChanged",
+        "SourceFiltersReordered", "MediaPlaying", "MediaPaused", "MediaRestarted",
+        "MediaStopped", "MediaNext", "MediaPrevious", "MediaStarted",
+        "MediaEnded", "SourceOrderChanged", "SceneItemAdded", "SceneItemRemoved",
+        "SceneItemVisibilityChanged", "SceneItemLockChanged", "SceneItemTransformChanged", "SceneItemSelected",
+        "SceneItemDeselected", "PreviewSceneChanged", "StudioModeSwitched"
     ];
 </script>
 
-<script type="text/html" data-template-name="obs-event">
+<script type="text/html" data-template-name="obs event">
     <div class="form-row">
-        <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
+        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
@@ -105,21 +103,19 @@
         <select id="node-input-event"></select>
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
 </script>
 
-<script type="text/html" data-help-name="obs-event">
-    <p>This node outputs messages based on the selected event type</p>
+<script type="text/html" data-help-name="obs event">
+    <p>This node outputs event messages based on the configured event type.</p>
     <h3>Outputs</h3>
     <ol class="node-ports">
-        <li>event output
-            <dl class="message-properties">
-                <dt>payload <span class="property-type">object</span></dt>
-                <dd>the event object as emitted by obs-websocket</dd>
-            </dl>
-        </li>
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">object</span></dt>
+            <dd>The event object as emitted by obs-websocket</dd>
+        </dl>
     </ol>
     <h3>References</h3>
     <ul>
@@ -127,11 +123,11 @@
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
-<!-- END obs-event -->
+<!-- END obs event -->
 
-<!-- obs-heartbeat -->
+<!-- obs heartbeat -->
 <script type="text/javascript">
-    RED.nodes.registerType("obs-heartbeat", {
+    RED.nodes.registerType("obs heartbeat", {
         category: "obs",
         color: "#F3B567",
         defaults: {
@@ -142,44 +138,42 @@
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||"obs-heartbeat";
+            return this.name||"obs heartbeat";
         }
     });
 </script>
 
-<script type="text/html" data-template-name="obs-heartbeat">
+<script type="text/html" data-template-name="obs heartbeat">
     <div class="form-row">
-        <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
+        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
 </script>
 
-<script type="text/html" data-help-name="obs-heartbeat">
-    <p>This node outputs messages based on the selected event type</p>
+<script type="text/html" data-help-name="obs heartbeat">
+    <p>This node outputs the obs-websocket heartbeat event which is emitted every 2 seconds.</p>
     <h3>Outputs</h3>
     <ol class="node-ports">
-        <li>event output
-            <dl class="message-properties">
-                <dt>payload <span class="property-type">object</span></dt>
-                <dd>the event object as emitted by obs-websocket</dd>
-            </dl>
-        </li>
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">object</span></dt>
+            <dd>The heartbeat event object as emitted by obs-websocket</dd>
+        </dl>
     </ol>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
+        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#heartbeat">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
-<!-- END obs-heartbeat -->
+<!-- END obs heartbeat -->
 
-<!-- obs-connection-status -->
+<!-- obs connection status -->
 <script type="text/javascript">
-    RED.nodes.registerType("obs-connection-status", {
+    RED.nodes.registerType("obs connection status", {
         category: "obs",
         color: "#F3B567",
         defaults: {
@@ -190,31 +184,41 @@
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||"obs-connection-status";
+            return this.name||"obs connection status";
         }
     });
-    
 </script>
 
-<script type="text/html" data-template-name="obs-connection-status">
+<script type="text/html" data-template-name="obs connection status">
     <div class="form-row">
-        <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
+        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
 </script>
 
-<script type="text/html" data-help-name="obs-connection-status">
-    <p>This node shows the obs connection status and if you want also outputs it.</p>
+<script type="text/html" data-help-name="obs connection status">
+    <p>This node shows the obs connection status and outputs it as a simple string.</p>
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">string</span></dt>
+            <dd>One of: "disconnected", "connected", "AuthenticationFailure"</dd>
+        </dl>
+    </ol>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
-<!-- END obs-connection-status -->
+<!-- END obs connection status -->
 
-<!-- obs-no-req-data-request -->
+<!-- obs request without data -->
 <script type="text/javascript">
-    RED.nodes.registerType("obs-no-req-data-request", {
+    RED.nodes.registerType("obs request without data", {
         category: "obs",
         color: "#F3B567",
         defaults: {
@@ -226,84 +230,36 @@
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||"obs-request-without-data";
+            return this.name||this.request;
         },
         oneditprepare: function() {
             websocketRequestTypes.forEach(function (item) {
                 $("#node-input-request").append($("<option>", {value: item, text: item}));
             });
-            $("#node-input-request").val(this.request || websocketRequestTypes[0]);
+            $("#node-input-request").val(this.request||websocketRequestTypes[0]);
         }
     });
-    
+
     const websocketRequestTypes = [
-        "GetVersion", "GetAuthRequired",
-        "SetFilenameFormatting", "GetFilenameFormatting",
-        "GetStats", "BroadcastCustomMessage",
-        "GetVideoInfo", "OpenProjector", 
-        "TriggerHotkeyByName", "TriggerHotkeyBySequence",
-        "PlayPauseMedia", "RestartMedia",
-        "StopMedia", "NextMedia",
-        "PreviousMedia", "GetMediaDuration",
-        "GetMediaTime", "SetMediaTime",
-        "ScrubMedia", "GetMediaState",
-        "GetMediaSourcesList", "CreateSource",
-        "GetSourcesList", "GetSourceTypesList",
-        "GetVolume", "SetVolume",
-        "GetMute", "SetMute",
-        "ToggleMute", "GetAudioActive",
-        "SetSourceName", "SetSyncOffset",
-        "GetSyncOffset", "GetSourceSettings",
-        "SetSourceSettings", "GetTextGDIPlusProperties",
-        "SetTextGDIPlusProperties", "GetTextFreetype2Properties",
-        "SetTextFreetype2Properties", "GetBrowserSourceProperties",
-        "SetBrowserSourceProperties", "GetSpecialSources",
-        "GetSourceFilters", "GetSourceFilterInfo",
-        "AddFilterToSource", "RemoveFilterFromSource",
-        "ReorderSourceFilter", "MoveSourceFilter",
-        "SetSourceFilterSettings", "SetSourceFilterVisibility",
-        "GetAudioMonitorType", "SetAudioMonitorType",
-        "TakeSourceScreenshot", "ListOutputs",
-        "GetOutputInfo", "StartOutput",
-        "StopOutput", "SetCurrentProfile",
-        "GetCurrentProfile", "ListProfiles",
-        "GetRecordingStatus", 
-        "StartStopRecording", "StartRecording",
-        "StopRecording", "PauseRecording",
-        "ResumeRecording", "SetRecordingFolder",
-        "GetRecordingFolder", "GetReplayBufferStatus",
-        "StartStopReplayBuffer", "StartReplayBuffer",
-        "StopReplayBuffer", "SaveReplayBuffer",
-        "SetCurrentSceneCollection", "GetCurrentSceneCollection",
-        "ListSceneCollections", "GetSceneItemList",
-        "GetSceneItemProperties", "SetSceneItemProperties",
-        "ResetSceneItem", "SetSceneItemRender",
-        "SetSceneItemPosition", "SetSceneItemTransform",
-        "SetSceneItemCrop", "DeleteSceneItem",
-        "AddSceneItem", "DuplicateSceneItem",
-        "SetCurrentScene", "GetCurrentScene",
-        "GetSceneList", "CreateScene",
-        "ReorderSceneItems", "SetSceneTransitionOverride",
-        "RemoveSceneTransitionOverride", "GetSceneTransitionOverride",
-        "GetStreamingStatus", "StartStopStreaming",
-        "StartStreaming", "StopStreaming", 
-        "SetStreamSettings", "GetStreamSettings",
-        "SaveStreamSettings", "SendCaptions",
-        "GetStudioModeStatus", "GetPreviewScene",
-        "SetPreviewScene", "TransitionToProgram",
-        "EnableStudioMode", "DisableStudioMode",
-        "ToggleStudioMode", "GetTransitionList",
-        "GetCurrentTransition", "SetCurrentTransition",
-        "SetTransitionDuration", "GetTransitionDuration",
-        "GetTransitionPosition", "GetTransitionSettings",
-        "SetTransitionSettings", "ReleaseTBar",
-        "SetTBarPosition"
+        "GetVersion", "GetAuthRequired", "GetFilenameFormatting", "GetStats",
+        "GetVideoInfo", "OpenProjector", "GetMediaSourcesList", "GetSourcesList",
+        "GetSourceTypesList", "GetSpecialSources", "TakeSourceScreenshot", "ListOutputs",
+        "GetCurrentProfile", "ListProfiles", "GetRecordingStatus", "StartStopRecording",
+        "StartRecording", "StopRecording", "PauseRecording", "ResumeRecording",
+        "GetRecordingFolder", "GetReplayBufferStatus", "StartStopReplayBuffer", "StartReplayBuffer",
+        "StopReplayBuffer", "SaveReplayBuffer", "GetCurrentSceneCollection", "ListSceneCollections",
+        "GetSceneItemList", "GetCurrentScene", "GetSceneList", "GetStreamingStatus",
+        "StartStopStreaming", "StartStreaming", "StopStreaming", "GetStreamSettings",
+        "SaveStreamSettings", "GetStudioModeStatus", "GetPreviewScene", "TransitionToProgram",
+        "EnableStudioMode", "DisableStudioMode", "ToggleStudioMode", "GetTransitionList",
+        "GetCurrentTransition", "GetTransitionDuration", "GetTransitionPosition", "ReleaseTBar",
+        "GetVirtualCamStatus", "StartStopVirtualCam", "StartVirtualCam", "StopVirtualCam"
     ];
 </script>
 
-<script type="text/html" data-template-name="obs-no-req-data-request">
+<script type="text/html" data-template-name="obs request without data">
     <div class="form-row">
-        <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
+        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
@@ -311,19 +267,35 @@
         <select id="node-input-request"></select>
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
 </script>
 
-<script type="text/html" data-help-name="obs-no-req-data-request">
-    <p>TODO. Everything that doesn"t need any request data, but only a  trigger</p>
+<script type="text/html" data-help-name="obs request without data">
+    <p>This node runs an obs-websocket request that does not need any custom arguments and outputs it's result.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dd>No message data is used for the request.</dd>
+    </dl>
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">object</span></dt>
+            <dd>The result object of the request as specified in the obs-websocket api docs</dd>
+        </dl>
+    </ol>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the response data</li>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
-<!-- END obs-no-req-data-request -->
+<!-- END obs request without data -->
 
-<!-- obs-raw-request -->
+<!-- obs raw request -->
 <script type="text/javascript">
-    RED.nodes.registerType("obs-raw-request", {
+    RED.nodes.registerType("obs raw request", {
         category: "obs",
         color: "#F3B567",
         defaults: {
@@ -335,9 +307,9 @@
         inputs: 1,
         outputs: 2,
         icon: "font-awesome/fa-cogs",
-        outputLabels: ["success","error"],
+        outputLabels: ["result","error"],
         label: function() {
-            return this.name||"obs-raw-request";
+            return this.name||"obs raw request";
         },
         oneditprepare: function() {
             if (this.payload == "") {
@@ -345,16 +317,16 @@
             }
             $("#node-input-payload").typedInput({
                 default: "msg",
-                typeField: $("#node-input-payloadType"),
+                typeField: "#node-input-payloadType",
                 types: ["msg","flow","global", "json"]
             });
         }
     });
 </script>
 
-<script type="text/html" data-template-name="obs-raw-request">
+<script type="text/html" data-template-name="obs raw request">
     <div class="form-row">
-        <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
+        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
@@ -363,15 +335,40 @@
         <input type="hidden" id="node-input-payloadType">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
 </script>
 
-<script type="text/html" data-help-name="obs-raw-request">
-    <p>TODO. Raw request from msg.payload or whatever specified. Only likes to eat real json objects</p>
+<script type="text/html" data-help-name="obs raw request">
+    <p>This node runs any obs-websocket request and outputs it's result.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt class="optional">payload (configurable) <span class="property-type">object</span></dt>
+        <dd>The obs-websocket request as an object. Don't include the "message-id".</dd>
+    </dl>
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <li>result output
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>The result output of the request if successful.</dd>
+            </dl>
+        </li>
+        <li>error output
+            <dl class="message-properties">
+                <dt>payload <span class="property-type">object</span></dt>
+                <dd>The error object of the request.</dd>
+            </dl>
+        </li>
+    </ol>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the response data</li>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
-<!-- END obs-raw-request -->
+<!-- END obs raw request -->
 
 <!-- SetCurrentScene -->
 <script type="text/javascript">
@@ -391,31 +388,31 @@
             return this.name||"SetCurrentScene";
         },
         oneditprepare: function() {
-            console.log("this", this);
             let sceneTypedInputObj = {
-                default: "sceneName",
-                typeField: $("#node-input-sceneType"),
-                types: ["str", "msg","flow","global"]
+                default: "str",
+                typeField: "#node-input-sceneType",
+                types: ["str", "jsonata", "msg","flow","global"]
             }
-            $("#ttp-offlinemessage").hide();
-            $.getJSON(`/nr-contrib-obs-ws/${this.obsInstance}/list/scenes`, (data) => {
-                let optionsArray = [];
-                data.scenes.forEach((o) => {
-                    optionsArray.push(o.name);
-                });
-                var scenesTypeDefinition = {
+
+            // Hide/show warning messages as needed
+            $("#scs-offlinemessage").hide();
+            $("#scs-redeploymessage").hide();
+            if (!this.obsInstance) $("#scs-redeploymessage").show();
+
+            // http request to backend for obs scene list
+            $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/scenes`, data => {
+                let scenesTypeDefinition = {
                     value: "sceneName",
                     label: "Scene",
                     hasValue: false,
                     icon: "red/images/typedInput/bool.png",
-                    options: optionsArray
+                    options: data.scenes.map(s => s.name)
                 };
                 sceneTypedInputObj.types.splice(0, 0, scenesTypeDefinition);
-            }).fail(() => { //503 = obs not connected
-                console.log("Fail");
-                $("#ttp-offlinemessage").show();
+                sceneTypedInputObj.default = "Scene";
+            }).fail(() => { // 503 = obs not connected
+                $("#scs-offlinemessage").show();
             }).always(() => {
-                console.log("tdobj", sceneTypedInputObj);
                 $("#node-input-scene").typedInput(sceneTypedInputObj);
             });
         }
@@ -423,9 +420,12 @@
 </script>
 
 <script type="text/html" data-template-name="SetCurrentScene">
-    <div class="form-row" style="color:red;display:none;" id="ttp-offlinemessage">Not connected to obs!</div>
+    <div class="form-row" style="color:red;display:none;" id="scs-offlinemessage">Not connected to obs!</div>
+    <div class="form-row" style="color:red;display:none;" id="scs-redeploymessage">
+        To access available obs scenes, please select a valid OBS Instance, redeploy and open this again.
+    </div>
     <div class="form-row">
-        <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
+        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
@@ -434,13 +434,32 @@
         <input type="hidden" id="node-input-sceneType">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
 </script>
 
 <script type="text/html" data-help-name="SetCurrentScene">
-    <p>TODO: Set current scene</p>
+    <p>This node switches the scene in obs.</p>
+    <p>Use a catch node to catch request errors.</p>
+    <p>To automatically fetch available transitions from obs make sure your obs is running and you deployed the node at least once after adding it.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt class="optional">payload (configurable) <span class="property-type">string</span></dt>
+        <dd>The scene name.</dd>
+    </dl>
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">object</span></dt>
+            <dd>The response of the request if successful.</dd>
+        </dl>
+    </ol>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#setcurrentscene">obs-websocket API docs</a> for this request</li>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
 <!-- END SetCurrentScene -->
 
@@ -464,7 +483,7 @@
             return this.name||"TransitionToProgram";
         },
         oneditprepare: function() {
-            let noneTypeDefinition = {
+            let noneTypeDef = {
                 value: "none",
                 label: "None",
                 hasValue: false,
@@ -472,42 +491,40 @@
             };
             let transitionTypedInputObj = {
                 default: "none",
-                typeField: $("#node-input-transitionType"),
-                types: [noneTypeDefinition, "str", "msg", "flow", "global"]
+                typeField: "#node-input-transitionType",
+                types: [noneTypeDef, "str", "msg", "flow", "global"]
             };
 
-            console.log("this", this);
+            // Hide/show warning messages as needed
             $("#ttp-offlinemessage").hide();
-            $.getJSON(`/nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (data) => {
-                console.log("Success. Data:", data, this.obsInstance);
-                let transitionOptions = [];
-                data.transitions.forEach((o) => {
-                    transitionOptions.push(o.name);
-                });
+            $("#ttp-redeploymessage").hide();
+            if (!this.obsInstance) $("#ttp-redeploymessage").show();
+
+            // http request to backend for obs transition list
+            $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (data) => {
                 var transitionTypeDef = {
                     value: "transition",
                     label: "Transition",
                     hasValue: false,
                     icon: "red/images/typedInput/bool.png",
-                    options: transitionOptions
+                    options: data.transitions.map(s => s.name)
                 };
                 transitionTypedInputObj.types.splice(1, 0, transitionTypeDef);
+                transitionTypedInputObj.default = "Transition";
             }).fail(() => { //503 = obs not connected
-                console.log("Fail");
                 $("#ttp-offlinemessage").show();
             }).always(() => {
-                console.log("tdobj", transitionTypedInputObj);
                 $("#node-input-transition").typedInput(transitionTypedInputObj);
             });
 
             $("#node-input-transitionTime").typedInput({
                 default: "none",
-                typeField: $("#node-input-transitionTimeType"),
-                types: [noneTypeDefinition, "num", "msg", "flow", "global", "jsonata"]
+                typeField: "#node-input-transitionTimeType",
+                types: [noneTypeDef, "num", "jsonata", "msg", "flow", "global"]
             });
 
+            // Hide and show transition time setting on transition settings change
             $("#node-input-transition").on('change', (type, value) => {
-                console.log("transition", value);
                 value == "none" ? $("#ttp-transistionTime").hide() : $("#ttp-transistionTime").show();
             });
         }
@@ -516,8 +533,11 @@
 
 <script type="text/html" data-template-name="TransitionToProgram">
     <div class="form-row" style="color:red;display:none;" id="ttp-offlinemessage">Not connected to obs!</div>
+    <div class="form-row" style="color:red;display:none;" id="ttp-redeploymessage">
+        To access available obs transitions, please select a valid OBS Instance, redeploy and open this again.
+    </div>
     <div class="form-row">
-        <label for="node-input-obsInstance"><i class="icon-tag"></i> OBS Instance</label>
+        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
@@ -531,12 +551,34 @@
         <input type="hidden" id="node-input-transitionTimeType">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
 </script>
 
 <script type="text/html" data-help-name="TransitionToProgram">
-    <p>TODO: Set current scene</p>
+    <p>This node triggers the transition to program action which will take the current preview scene to program.</p>
+    <p>It's the same action that happens in obs when pressing the "Transition" button in studio mode.</p>
+    <p>Use a catch node to catch request errors.</p>
+    <p>To automatically fetch available transitions from obs make sure your obs is running and you deployed the node at least once after adding it.</p>
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt class="optional">transition (configurable) <span class="property-type">string</span></dt>
+        <dd>The optional transition name to use.</dd>
+        <dt class="optional">transitionTime (configurable) <span class="property-type">string</span></dt>
+        <dd>The optional transition time to use for the specified transition.</dd>
+    </dl>
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <dl class="message-properties">
+            <dt>payload <span class="property-type">object</span></dt>
+            <dd>The response of the request if successful.</dd>
+        </dl>
+    </ol>
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#transitiontoprogram">obs-websocket API docs</a> for this request</li>
+        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
+    </ul>
 </script>
 <!-- END TransitionToProgram -->
