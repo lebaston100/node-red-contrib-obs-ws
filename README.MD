@@ -19,7 +19,8 @@ Manual install:
 
 ## Use
 Basic node-red usage is expected as basic knowledge. All nodes are documented inside the internal node-red node help tool with a little more detail.  
-For a complete documentation over the messages that can be used, look at the [obs-websocket protocol documentation](https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md).
+For a complete documentation over the messages that can be used, look at the [obs-websocket protocol documentation](https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md).  
+Only obs-websocket versions < 5.0.0 are supported at the time.
 
 ### Nodes
 
