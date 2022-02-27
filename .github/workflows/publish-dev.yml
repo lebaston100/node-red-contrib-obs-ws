@@ -1,7 +1,9 @@
-name: npm-publish
+name: npm-publish-dev
 
 on:
   push:
+    branches-ignore:
+      - master
   workflow_dispatch:
 
 jobs:
@@ -17,3 +19,4 @@ jobs:
       - uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
+          tag: dev
