@@ -3,15 +3,15 @@
     RED.nodes.registerType("obs-instance", {
         category: "config",
         defaults: {
-            name: {value: ""},
-            host: {value: "localhost", required: true},
-            port: {value: 4444, required: true, validate: RED.validators.number()}
+            name: {value: "OBS Instance", required: false},
+            host: {value: "127.0.0.1", required: true},
+            port: {value: 4455, required: true, validate: RED.validators.number()}
         },
         credentials: {
             password: {type: "password"}
         },
         label: function() {
-            return this.name||`${this.host}:${this.port}`;
+            return this.name||`ws://${this.host}:${this.port}`;
         }
     });
 </script>
@@ -39,11 +39,11 @@
     <h3>Details</h3>
         <p>This node represents a single connection to the obs websocket server.</p>
         <p><code>Host/IP</code> is the ip address or hostname of the device running obs.</p>
-        <p><code>Port</code> is the configured websocket port in the obs-websocket settings. Default is 4444.</p>
+        <p><code>Port</code> is the configured websocket port in the obs-websocket settings. Default is 4455.</p>
         <p><code>Password</code> is the configured passwort in the obs-websocket settings. Leave empty if disabled.</p>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket">obs-websocket</a> - GitHub project page</li>
+        <li><a href="https://github.com/obsproject/obs-websocket">obs-websocket</a> - GitHub project page</li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
@@ -56,14 +56,14 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            event: {value: "SwitchScenes", required: true},
+            event: {value: "", required: true},
             obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 0,
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||"obs event";
+            return this.name||this.event||"obs event";
         },
         oneditprepare: function() {
             websocketEventTypes.forEach(function (item) {
@@ -74,22 +74,19 @@
     });
 
     const websocketEventTypes = [
-        "SwitchScenes", "ScenesChanged", "SceneCollectionChanged", "SceneCollectionListChanged",
-        "SwitchTransition", "TransitionListChanged", "TransitionDurationChanged", "TransitionBegin",
-        "TransitionEnd", "TransitionVideoEnd", "ProfileChanged", "ProfileListChanged",
-        "StreamStarting", "StreamStarted", "StreamStopping", "StreamStopped",
-        "StreamStatus", "RecordingStarting", "RecordingStarted",
-        "RecordingStopping", "RecordingStopped", "RecordingPaused", "RecordingResumed",
-        "VirtualCamStarted", "VirtualCamStopped", "ReplayStarting", "ReplayStarted",
-        "ReplayStopping", "ReplayStopped", "Exiting", "BroadcastCustomMessage",
-        "SourceCreated", "SourceDestroyed", "SourceVolumeChanged", "SourceMuteStateChanged",
-        "SourceAudioDeactivated", "SourceAudioActivated", "SourceAudioSyncOffsetChanged", "SourceAudioMixersChanged",
-        "SourceRenamed", "SourceFilterAdded", "SourceFilterRemoved", "SourceFilterVisibilityChanged",
-        "SourceFiltersReordered", "MediaPlaying", "MediaPaused", "MediaRestarted",
-        "MediaStopped", "MediaNext", "MediaPrevious", "MediaStarted",
-        "MediaEnded", "SourceOrderChanged", "SceneItemAdded", "SceneItemRemoved",
-        "SceneItemVisibilityChanged", "SceneItemLockChanged", "SceneItemTransformChanged", "SceneItemSelected",
-        "SceneItemDeselected", "PreviewSceneChanged", "StudioModeSwitched"
+        "CurrentSceneCollectionChanging", "CurrentSceneCollectionChanged", "SceneCollectionListChanged",
+        "CurrentProfileChanging", "CurrentProfileChanged", "ProfileListChanged", "SourceFilterListReindexed",
+        "SourceFilterCreated", "SourceFilterRemoved", "SourceFilterNameChanged", "SourceFilterEnableStateChanged",
+        "ExitStarted", "InputCreated", "InputRemoved", "InputNameChanged", "InputActiveStateChanged", "InputShowStateChanged",
+        "InputMuteStateChanged", "InputVolumeChanged", "InputAudioBalanceChanged", "InputAudioSyncOffsetChanged",
+        "InputAudioTracksChanged", "InputAudioMonitorTypeChanged", "InputVolumeMeters", "MediaInputPlaybackStarted",
+        "MediaInputPlaybackEnded", "MediaInputActionTriggered", "StreamStateChanged", "RecordStateChanged",
+        "ReplayBufferStateChanged", "VirtualcamStateChanged", "ReplayBufferSaved", "SceneItemCreated", "SceneItemRemoved",
+        "SceneItemListReindexed", "SceneItemEnableStateChanged", "SceneItemLockStateChanged", "SceneItemSelected",
+        "SceneItemTransformChanged", "SceneCreated", "SceneRemoved", "SceneNameChanged", "CurrentProgramSceneChanged",
+        "CurrentPreviewSceneChanged", "SceneListChanged", "CurrentSceneTransitionChanged", "CurrentSceneTransitionDurationChanged",
+        "SceneTransitionStarted", "SceneTransitionEnded", "SceneTransitionVideoEnded", "StudioModeStateChanged",
+        "VendorEvent",
     ];
 </script>
 
@@ -119,57 +116,11 @@
     </ol>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
+        <li><a href="https://github.com/obsproject/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
 <!-- END obs event -->
-
-<!-- obs heartbeat -->
-<script type="text/javascript">
-    RED.nodes.registerType("obs heartbeat", {
-        category: "obs",
-        color: "#F3B567",
-        defaults: {
-            name: {value: ""},
-            obsInstance: {type: "obs-instance", required: true}
-        },
-        inputs: 0,
-        outputs: 1,
-        icon: "font-awesome/fa-cogs",
-        label: function() {
-            return this.name||"obs heartbeat";
-        }
-    });
-</script>
-
-<script type="text/html" data-template-name="obs heartbeat">
-    <div class="form-row">
-        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
-        <input type="text" id="node-input-obsInstance">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name (optional)">
-    </div>
-</script>
-
-<script type="text/html" data-help-name="obs heartbeat">
-    <p>This node outputs the obs-websocket heartbeat event which is emitted every 2 seconds.</p>
-    <h3>Outputs</h3>
-    <ol class="node-ports">
-        <dl class="message-properties">
-            <dt>payload <span class="property-type">object</span></dt>
-            <dd>The heartbeat event object as emitted by obs-websocket</dd>
-        </dl>
-    </ol>
-    <h3>References</h3>
-    <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#heartbeat">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
-        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
-    </ul>
-</script>
-<!-- END obs heartbeat -->
 
 <!-- obs connection status -->
 <script type="text/javascript">
@@ -201,12 +152,12 @@
 </script>
 
 <script type="text/html" data-help-name="obs connection status">
-    <p>This node shows the obs connection status and outputs it as a simple string.</p>
+    <p>This node shows and outputs the obs connection status.</p>
     <h3>Outputs</h3>
     <ol class="node-ports">
         <dl class="message-properties">
             <dt>payload <span class="property-type">string</span></dt>
-            <dd>One of: "disconnected", "connected", "AuthenticationFailure"</dd>
+            <dd>One of: "ConnectionOpened", "Identified", "AuthenticationFailure", "ConnectionClosed"</dd>
         </dl>
     </ol>
     <h3>References</h3>
@@ -223,7 +174,7 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            request: {value: "GetVersion", required: true},
+            request: {value: "", required: true},
             obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
@@ -233,27 +184,23 @@
             return this.name||this.request;
         },
         oneditprepare: function() {
-            websocketRequestTypes.forEach(function (item) {
+            websocketNoDataRequestTypes.forEach(function (item) {
                 $("#node-input-request").append($("<option>", {value: item, text: item}));
             });
-            $("#node-input-request").val(this.request||websocketRequestTypes[0]);
+            $("#node-input-request").val(this.request||websocketNoDataRequestTypes[0]);
         }
     });
 
-    const websocketRequestTypes = [
-        "GetVersion", "GetAuthRequired", "GetFilenameFormatting", "GetStats",
-        "GetVideoInfo", "OpenProjector", "GetMediaSourcesList", "GetSourcesList",
-        "GetSourceTypesList", "GetSpecialSources", "TakeSourceScreenshot", "ListOutputs",
-        "GetCurrentProfile", "ListProfiles", "GetRecordingStatus", "StartStopRecording",
-        "StartRecording", "StopRecording", "PauseRecording", "ResumeRecording",
-        "GetRecordingFolder", "GetReplayBufferStatus", "StartStopReplayBuffer", "StartReplayBuffer",
-        "StopReplayBuffer", "SaveReplayBuffer", "GetCurrentSceneCollection", "ListSceneCollections",
-        "GetSceneItemList", "GetCurrentScene", "GetSceneList", "GetStreamingStatus",
-        "StartStopStreaming", "StartStreaming", "StopStreaming", "GetStreamSettings",
-        "SaveStreamSettings", "GetStudioModeStatus", "GetPreviewScene", "TransitionToProgram",
-        "EnableStudioMode", "DisableStudioMode", "ToggleStudioMode", "GetTransitionList",
-        "GetCurrentTransition", "GetTransitionDuration", "GetTransitionPosition", "ReleaseTBar",
-        "GetVirtualCamStatus", "StartStopVirtualCam", "StartVirtualCam", "StopVirtualCam"
+    const websocketNoDataRequestTypes = [
+        "GetSceneCollectionList", "GetProfileList", "GetVideoSettings", "SetVideoSettings", "GetStreamServiceSettings",
+        "GetRecordDirectory", "GetVersion", "GetStats", "GetHotkeyList", "TriggerHotkeyByKeySequence", "GetInputList",
+        "GetInputKindList", "GetSpecialInputs", "GetVirtualCamStatus", "ToggleVirtualCam", "StartVirtualCam",
+        "StopVirtualCam", "GetReplayBufferStatus", "ToggleReplayBuffer", "StartReplayBuffer", "StopReplayBuffer",
+        "SaveReplayBuffer", "GetLastReplayBufferReplay", "GetOutputList", "GetRecordStatus", "ToggleRecord",
+        "StartRecord", "StopRecord", "ToggleRecordPause", "PauseRecord", "ResumeRecord", "GetSceneList", "GetGroupList",
+        "GetCurrentProgramScene", "GetCurrentPreviewScene", "GetStreamStatus", "ToggleStream", "StartStream",
+        "StopStream", "GetTransitionKindList", "GetSceneTransitionList", "GetCurrentSceneTransition", "GetCurrentSceneTransitionCursor",
+        "TriggerStudioModeTransition", "GetStudioModeEnabled", "GetMonitorList",
     ];
 </script>
 
@@ -273,7 +220,7 @@
 </script>
 
 <script type="text/html" data-help-name="obs request without data">
-    <p>This node runs an obs-websocket request that does not need any custom arguments and outputs it's result.</p>
+    <p>This node runs a obs-websocket request that does not need any custom arguments and outputs it's result.</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
         <dd>No message data is used for the request.</dd>
@@ -287,7 +234,7 @@
     </ol>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the response data</li>
+        <li><a href="https://github.com/obsproject/obs-websocket/blob/4.x-current/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the response data</li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
@@ -300,26 +247,48 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            payload: {value:"", required: true, validate: RED.validators.typedInput("payloadType")},
-            payloadType: {value:"payload"},
+            reqType: {value:"", required: true},
+            reqTypeType: {value:"", required: true},
+            reqData: {value:""},
+            reqDataType: {value:"", required: true},
             obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
         outputs: 2,
         icon: "font-awesome/fa-cogs",
-        outputLabels: ["result","error"],
+        outputLabels: ["result", "error"],
         label: function() {
             return this.name||"obs raw request";
         },
         oneditprepare: function() {
-            if (this.payload == "") {
-                $("#node-input-payload").val("payload");
-            }
-            $("#node-input-payload").typedInput({
+            let noneTypeDef = {
+                value: "none",
+                label: "None",
+                hasValue: false,
+                icon: "fa fa-times-circle-o"
+            };
+
+            // Initialize typedInput for requestType
+            $("#node-input-reqType").typedInput({
                 default: "msg",
-                typeField: "#node-input-payloadType",
-                types: ["msg","flow","global", "json"]
+                types: ["str","msg","flow","global"],
+                typeField: $("#node-input-reqTypeType")
             });
+            // Set default values if none set
+            if (!this.reqType) {
+                $("#node-input-reqType").typedInput("type", "msg");
+                $("#node-input-reqType").typedInput("value", "topic");
+            }
+
+            // Initialize typedInput for requestData
+            $("#node-input-reqData").typedInput({
+                types: [noneTypeDef,"msg","flow","global","json"],
+                typeField: $("#node-input-reqDataType")
+            });
+            // Set default values if none set
+            if (!this.reqData) {
+                $("#node-input-reqData").typedInput("type", "none");
+            }
         }
     });
 </script>
@@ -330,9 +299,14 @@
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
-        <label for="node-input-payload">Request Source</label>
-        <input type="text" id="node-input-payload" style="width:70%">
-        <input type="hidden" id="node-input-payloadType">
+        <label for="node-input-payload">Request Type</label>
+        <input type="text" id="node-input-reqType" style="width:70%">
+        <input type="hidden" id="node-input-reqTypeType">
+    </div>
+    <div class="form-row">
+        <label for="node-input-payload">Request Data</label>
+        <input type="text" id="node-input-reqData" style="width:70%">
+        <input type="hidden" id="node-input-reqDataType">
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -341,57 +315,68 @@
 </script>
 
 <script type="text/html" data-help-name="obs raw request">
-    <p>This node runs any obs-websocket request and outputs it's result.</p>
+    <p>This node runs any obs-websocket request and returns it's result or error.</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
+        <dt class="optional">topic (configurable) <span class="property-type">string</span></dt>
+        <dd>The request name.</dd>
+    </dl>
+    <dl class="message-properties">
         <dt class="optional">payload (configurable) <span class="property-type">object</span></dt>
-        <dd>The obs-websocket request as an object. Don't include the "message-id".</dd>
+        <dd>Additional "Data Fields" in json format.</dd>
     </dl>
     <h3>Outputs</h3>
     <ol class="node-ports">
         <li>result output
             <dl class="message-properties">
                 <dt>payload <span class="property-type">object</span></dt>
-                <dd>The result output of the request if successful.</dd>
+                <dd>The result of the request if successful.</dd>
             </dl>
         </li>
         <li>error output
             <dl class="message-properties">
-                <dt>payload <span class="property-type">object</span></dt>
-                <dd>The error object of the request.</dd>
+                <dt>payload <span class="property-type">string</span></dt>
+                <dd>The obs-websocket error..</dd>
             </dl>
         </li>
     </ol>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the response data</li>
+        <li><a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the requests and data fields</li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
 <!-- END obs raw request -->
 
-<!-- SetCurrentScene -->
+<!-- SetCurrentProgramScene -->
 <script type="text/javascript">
-    RED.nodes.registerType("SetCurrentScene", {
+    RED.nodes.registerType("SetCurrentProgramScene", {
         category: "obs",
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            scene: {value: "", required: false, validate: RED.validators.typedInput("sceneType")},
-            sceneType: {value: "Scene"},
+            scene: {value: "", required: true},
+            sceneType: {value: "", required: true},
             obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||"SetCurrentScene";
+            return this.name||"SetCurrentProgramScene";
         },
         oneditprepare: function() {
+            let scenesTypeDef = {
+                    value: "sceneName",
+                    label: "Scene",
+                    hasValue: false,
+                    icon: "fa fa-list",
+                    options: null
+            };
             let sceneTypedInputObj = {
-                default: "str",
-                typeField: "#node-input-sceneType",
-                types: ["str", "jsonata", "msg","flow","global"]
+                default: "Scene",
+                typeField: $("#node-input-sceneType"),
+                types: [scenesTypeDef, "str","jsonata","msg","flow","global"]
             }
 
             // Hide/show warning messages as needed
@@ -401,16 +386,9 @@
 
             // http request to backend for obs scene list
             $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/scenes`, data => {
-                let scenesTypeDefinition = {
-                    value: "sceneName",
-                    label: "Scene",
-                    hasValue: false,
-                    icon: "red/images/typedInput/bool.png",
-                    options: data.scenes.map(s => s.name)
-                };
-                sceneTypedInputObj.types.splice(0, 0, scenesTypeDefinition);
-                sceneTypedInputObj.default = "Scene";
+                scenesTypeDef.options = data.scenes.reverse().map(s => s.sceneName); // Works because object reference is kept when putting inside sceneTypedInputObj
             }).fail(() => { // 503 = obs not connected
+                if (this.sceneType == "sceneName" && this.scene !== "") scenesTypeDef.options = [this.scene];
                 $("#scs-offlinemessage").show();
             }).always(() => {
                 $("#node-input-scene").typedInput(sceneTypedInputObj);
@@ -419,7 +397,7 @@
     });
 </script>
 
-<script type="text/html" data-template-name="SetCurrentScene">
+<script type="text/html" data-template-name="SetCurrentProgramScene">
     <div class="form-row" style="color:red;display:none;" id="scs-offlinemessage">Not connected to obs!</div>
     <div class="form-row" style="color:red;display:none;" id="scs-redeploymessage">
         To access available obs scenes, please select a valid OBS Instance, redeploy and open this again.
@@ -439,10 +417,10 @@
     </div>
 </script>
 
-<script type="text/html" data-help-name="SetCurrentScene">
+<script type="text/html" data-help-name="SetCurrentProgramScene">
     <p>This node switches the scene in obs.</p>
-    <p>Use a catch node to catch request errors.</p>
-    <p>To automatically fetch available transitions from obs make sure your obs is running and you deployed the node at least once after adding it.</p>
+    <p>Use a catch node to catch request errors. (optional)</p>
+    <p>To automatically fetch available scenes from obs, make sure your obs is running and you deployed the node at least once after adding it.</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
         <dt class="optional">payload (configurable) <span class="property-type">string</span></dt>
@@ -451,48 +429,55 @@
     <h3>Outputs</h3>
     <ol class="node-ports">
         <dl class="message-properties">
-            <dt>payload <span class="property-type">object</span></dt>
-            <dd>The response of the request if successful.</dd>
+            <dt>payload <span class="property-type">string</span></dt>
+            <dd>The selected scene name if successful.</dd>
         </dl>
     </ol>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#setcurrentscene">obs-websocket API docs</a> for this request</li>
+        <li><a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#setcurrentprogramscene">obs-websocket API docs</a> for this request</li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
-<!-- END SetCurrentScene -->
+<!-- END SetCurrentProgramScene -->
 
-<!-- TransitionToProgram -->
+<!-- TriggerStudioModeTransition -->
 <script type="text/javascript">
-    RED.nodes.registerType("TransitionToProgram", {
+    RED.nodes.registerType("TriggerStudioModeTransition", {
         category: "obs",
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            transition: {value: "", required: false, validate: RED.validators.typedInput("transitionType")},
-            transitionType: {value: "none"},
-            transitionTime: {value: "0", required: false, validate: RED.validators.typedInput("transitionTimeType")},
-            transitionTimeType: {value: "none"},
+            transition: {value: ""},
+            transitionType: {value: ""},
+            transitionTime: {value: ""},
+            transitionTimeType: {value: ""},
             obsInstance: {type: "obs-instance", required: true}
         },
         inputs: 1,
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||"TransitionToProgram";
+            return this.name||"TriggerStudioModeTransition";
         },
         oneditprepare: function() {
             let noneTypeDef = {
                 value: "none",
                 label: "None",
                 hasValue: false,
-                icon: "red/images/typedInput/bool.png"
+                icon: "fa fa-times-circle-o"
+            };
+            var transitionTypeDef = {
+                    value: "transition",
+                    label: "Transition",
+                    hasValue: false,
+                    icon: "/red/images/typedInput/bool.svg",
+                    options: null
             };
             let transitionTypedInputObj = {
                 default: "none",
                 typeField: "#node-input-transitionType",
-                types: [noneTypeDef, "str", "msg", "flow", "global"]
+                types: [noneTypeDef, transitionTypeDef, "str", "msg", "flow", "global"]
             };
 
             // Hide/show warning messages as needed
@@ -502,16 +487,9 @@
 
             // http request to backend for obs transition list
             $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (data) => {
-                var transitionTypeDef = {
-                    value: "transition",
-                    label: "Transition",
-                    hasValue: false,
-                    icon: "red/images/typedInput/bool.png",
-                    options: data.transitions.map(s => s.name)
-                };
-                transitionTypedInputObj.types.splice(1, 0, transitionTypeDef);
-                transitionTypedInputObj.default = "Transition";
+                transitionTypeDef.options = data.transitions.map(s => s.transitionName);
             }).fail(() => { //503 = obs not connected
+                if (this.transitionType == "transition" && this.transition !== "") transitionTypeDef.options = [this.transition];
                 $("#ttp-offlinemessage").show();
             }).always(() => {
                 $("#node-input-transition").typedInput(transitionTypedInputObj);
@@ -531,7 +509,7 @@
     });
 </script>
 
-<script type="text/html" data-template-name="TransitionToProgram">
+<script type="text/html" data-template-name="TriggerStudioModeTransition">
     <div class="form-row" style="color:red;display:none;" id="ttp-offlinemessage">Not connected to obs!</div>
     <div class="form-row" style="color:red;display:none;" id="ttp-redeploymessage">
         To access available obs transitions, please select a valid OBS Instance, redeploy and open this again.
@@ -556,8 +534,9 @@
     </div>
 </script>
 
-<script type="text/html" data-help-name="TransitionToProgram">
+<script type="text/html" data-help-name="TriggerStudioModeTransition">
     <p>This node triggers the transition to program action which will take the current preview scene to program.</p>
+    <p>By automatically sending 2 different requests before that it can optionally change the transition and set it's duration.</p>
     <p>It's the same action that happens in obs when pressing the "Transition" button in studio mode.</p>
     <p>Use a catch node to catch request errors.</p>
     <p>To automatically fetch available transitions from obs make sure your obs is running and you deployed the node at least once after adding it.</p>
@@ -577,8 +556,8 @@
     </ol>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/Palakis/obs-websocket/blob/4.x-current/docs/generated/protocol.md#transitiontoprogram">obs-websocket API docs</a> for this request</li>
+        <li><a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#triggerstudiomodetransition">obs-websocket API docs</a> for this request</li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
-<!-- END TransitionToProgram -->
+<!-- END TriggerStudioModeTransition -->

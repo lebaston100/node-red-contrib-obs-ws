@@ -2,117 +2,172 @@
 
 module.exports = function(RED) {
     "use strict";
-    const OBSWebSocket = require("obs-websocket-js");
+    const OBSWebSocket = require('obs-websocket-js').default;
+    const { EventSubscription } = require('obs-websocket-js');
 
     var requestHandlers = [];
 
-    // obs-websocket connection config node
-    function WebsocketClientNode(config) {
+    // obs-websocket config node
+    function ObsWebsocketClientNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.debug("Starting obs config node");
+        node.trace("Starting obs config node");
         node.host = config.host;
         node.port = config.port;
         node.password = node.credentials.password;
         node.tout = null;
-        node.blockReconTry = false;
+        node.identified = false;
+        node.requestsInFlight = 0;
+        node.eventSubs = {
+            All: 1 // Name: Refcount
+        };
 
         // Create connection object
-        node.connectionSettings = {address: `${node.host}:${node.port}`};
-        if (node.password) node.connectionSettings.password = node.password;
+        node.connectionSettings = {rpcVersion: 1}; //eventSubscriptions  just for testing, will need to add a manager for that later
 
         // Create obs-websocket-js client instance and start connection
         node.trace("Creating obs-websocket-js client");
         node.obs = new OBSWebSocket();
         tryConnection();
 
-        function tryConnection() {
+        async function tryConnection() {
             node.tout = null;
             node.trace("Trying to connect to obs");
-            node.obs.connect(node.connectionSettings)
-                .then(() => {
-                    node.trace("Connected (and authenticated) to obs");
+            try {
+                let con = await node.obs.connect(`ws://${node.host}:${node.port}`, node.password, node.connectionSettings);
+                node.trace(JSON.stringify(con)); // Response from obs-ws which version it's running
+                node.trace("Connected (and authenticated) to obs");
 
-                    // Remove all HTTP Request Handlers
-                    removeAllOwnHandlers(node.id);
-                    // Get scenes from obs
-                    registerURLHandler(node.id, "scenes", (req, res) => {
-                        universalOBSRequester("GetSceneList", res);
-                    });
-                    // Get special sources from obs (unused)
-                    /*registerURLHandler(node.id, "specialsources", (req, res) => {
-                        universalOBSRequester("GetSpecialSources", res);
-                    });*/
-                    // Get transitions from obs
-                    registerURLHandler(node.id, "transitions", (req, res) => {
-                        universalOBSRequester("GetTransitionList", res);
-                    });
-                    // Get profiles from obs (unused)
-                    /*registerURLHandler(node.id, "profiles", (req, res) => {
-                        universalOBSRequester("ListProfiles", res);
-                    });*/
-                    // Get scene collections from obs (unused)
-                    /*registerURLHandler(node.id, "scenecollections", (req, res) => {
-                        universalOBSRequester("ListSceneCollections", res);
-                    });*/
-                    // Tell other nodes that the obs connection was established (vs the raw websocket connection)
-                    node.emit("obsConnectionOpened");
-                }).catch(err => {
-                    if (err.code !== "CONNECTION_ERROR") {
-                        node.error(err);
-                        node.blockReconTry = true; // Block reconnect until next redeploy because something is very wrong anways
-                    }
-                    // Non-CONNECTION_ERROR will be handled by the ConnectionClosed handler
+                // Remove all HTTP Request Handlers
+                removeAllOwnHandlers(node.id);
+                // Get scenes from obs
+                registerURLHandler(node.id, "scenes", (req, res) => {
+                    universalOBSRequester("GetSceneList", res);
                 });
+                // Get transitions from obs
+                registerURLHandler(node.id, "transitions", (req, res) => {
+                    universalOBSRequester("GetSceneTransitionList", res);
+                });
+
+                // Tell other nodes that the obs connection was established (vs the raw websocket connection)
+                node.emit("obsConnectionOpened");
+            } catch(err) {
+                // Nothing, stuffs handled elsewhere
+            }
         }
 
         function obsReconnector() {
-            node.tout = setTimeout(() => {tryConnection();}, 3000);
+            node.tout = setTimeout(tryConnection, 3000);
         }
 
-        node.on("close", function(done) {
-            node.debug("closing node, cleaning up");
-            if (node.tout) clearTimeout(node.tout); // Just to make sure
-            node.obs.removeAllListeners("ConnectionClosed");
-            node.obs.disconnect();
-            done();
+        // node-red node closing
+        node.on("close", async function(done) {
+            node.trace("closing node, cleaning up");
+            if (node.tout) clearTimeout(node.tout); // remove remaining reconnect timer if any
+            node.obs.removeAllListeners("ConnectionClosed"); // don't handle disconnect event like i would normally
+            setTimeout(() => ensureAllDone(done), 5);
         });
 
-        node.obs.on("error", err => {
-            node.warn("websocket error", err);
-        });
+        async function ensureAllDone(done) {
+            if (node.requestsInFlight <= 0) {
+                node.trace("Requests are all done, disconnecting and closing node now")
+                await node.obs.disconnect();
+                node.identified = false;
+                done();
+            } else {
+                setTimeout(() => ensureAllDone(done), 5);
+            }
+        }
 
         node.obs.on("ConnectionOpened", () => {
             node.emit("ConnectionOpened");
-            node.debug("ConnectionOpened obs event");
+            node.trace("ConnectionOpened obs event");
             if (node.tout) clearTimeout(node.tout); // Just to make sure
         });
 
-        node.obs.on("ConnectionClosed", () => {
+        node.obs.on("ConnectionClosed", err => {
             node.emit("ConnectionClosed");
-            node.debug("ConnectionClosed obs event");
-            if (!node.tout && !node.blockReconTry) {
-                node.debug("Starting Reconnector because ConnectionClosed obs event");
+            node.trace("ConnectionClosed obs event");
+            node.identified = false;
+
+            if (err.code && err.code == 4009) {
+                node.error("OBS Authentication failed. Please check the password you set.");
+                node.emit("AuthenticationFailure");
+                return; // don't even try to connect again
+            }
+
+            node.trace(`node.tout: ${node.tout}`)
+            if (!node.tout) {
+                node.trace("Starting Reconnector because ConnectionClosed obs event");
                 obsReconnector();
             }
         });
 
-        node.obs.on("AuthenticationFailure", () => {
-            node.error("OBS Authentication failed. Please check the password you set.");
-            node.emit("AuthenticationFailure");
+        node.obs.on("Identified", async () => {
+            node.trace("Identified obs event");
+            // We need this for EventSubscription handling
+            node.identified = true;
+            await node.obs.reidentify(getEventSubs());
         });
 
-        function universalOBSRequester(request, res) {
-            node.obs.send(request)
-                .then(data => {
-                    res.json(data);
-                }).catch(() => {
-                    res.sendStatus(503);
-                });
+        async function universalOBSRequester(request, res) {
+            try {
+                node.requestsInFlight += 1;
+                let req = await node.obs.call(request);
+                res.json(req);
+            } catch (err) {
+                res.sendStatus(503);
+            }
+            node.requestsInFlight -= 1;
+        }
+
+        // Register new event subscriptions
+        node.registerEventsub = async function (sub) {
+            if (node.eventSubs.hasOwnProperty(sub)) {
+                node.eventSubs[sub] += 1;
+            } else {
+                node.eventSubs[sub] = 1;
+                node.requestsInFlight += 1;
+                try {
+                    if (node.identified) await node.obs.reidentify(getEventSubs());
+                } catch (err) {
+                    node.error(err);
+                }
+                node.requestsInFlight -= 1;
+            }
+        }
+
+        // Unregister event subscriptions
+        node.unRegisterEventsub = async function (sub) {
+            if (node.eventSubs.hasOwnProperty(sub)) {
+                node.eventSubs[sub] -= 1;
+                if (node.eventSubs[sub] == 0) {
+                    node.trace(`EventSubscription ${sub} reached 0, deleting and unregistering`)
+                    delete node.eventSubs[sub];
+                    node.requestsInFlight += 1;
+                    try {
+                        if (node.identified) await node.obs.reidentify(getEventSubs());
+                    } catch (err) {
+                        node.error(err);
+                    }
+                    node.requestsInFlight -= 1;
+                }
+            } else {
+                node.error("Event subcription is not there. Was it registered?");
+            }
+        }
+
+        // Internal function to resolve my event sub object to something obs-websocket can understand
+        function getEventSubs() {
+            let subs = 0;
+            for (const sub in node.eventSubs) {
+                subs = subs | EventSubscription[sub];
+            }
+            return {eventSubscriptions: subs};
         }
     }
 
-    RED.nodes.registerType("obs-instance", WebsocketClientNode, {
+    RED.nodes.registerType("obs-instance", ObsWebsocketClientNode, {
         credentials: {
             password: {
                 type: "password"
@@ -122,16 +177,16 @@ module.exports = function(RED) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     // HTTP endpoint handler
-    RED.httpAdmin.get("/nr-contrib-obs-ws/:id/list/:request", function(req, res, next) {
-        expressRequestHandler(req, res, next);
+    RED.httpAdmin.get("/nr-contrib-obs-ws/:id/list/:request", function(req, res) {
+        expressRequestHandler(req, res);
     });
 
-    function expressRequestHandler(req, res, next) {
+    function expressRequestHandler(req, res) {
         let answered = false;
         requestHandlers.forEach(item => {
             if (req.params.id === item.nodeID && req.params.request === item.endpoint) {
                 answered = true;
-                item.callback(req, res, next);
+                item.callback(req, res);
             }
         });
         !answered && res.sendStatus(503);
@@ -152,65 +207,54 @@ module.exports = function(RED) {
     function obs_event(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.instance = RED.nodes.getNode(config.obsInstance);
-        if (node.instance) {
-            node.instance.obs.on(config.event, data => {
-                node.send({payload: removeKebabCases(data)});
+        node.c = RED.nodes.getNode(config.obsInstance);
+        const highVolumeEvents = ["InputVolumeMeters", "InputActiveStateChanged", "InputShowStateChanged", "SceneItemTransformChanged"];
+        if (node.c) {
+            // check if is high volume event and update sub manager
+            if (highVolumeEvents.includes(config.event)) {
+                node.trace(`The event ${config.event} is a high volume event. Updating event reg.`);
+                setTimeout(async () => {
+                    await node.c.registerEventsub(config.event);
+                }, 1);
+
+                // node-red node closing we need to handle in this case
+                node.on("close", async (done) => {
+                    await node.c.unRegisterEventsub(config.event);
+                    node.trace("Done closing event node instance");
+                    done();
+                });
+            }
+
+            // Register obs event listener
+            node.c.obs.on(config.event, data => {
+                node.send({topic: config.event, payload: data});
             });
         }
     }
     RED.nodes.registerType("obs event", obs_event);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-    // obs heartbeat node
-    function obs_heartbeat(config) {
-        RED.nodes.createNode(this, config);
-        var node = this;
-        node.instance = RED.nodes.getNode(config.obsInstance);
-        if (node.instance) {
-            node.instance.on("obsConnectionOpened", () => {
-                node.instance.obs.send("SetHeartbeat", {"enable": true})
-                .then(() => {
-                    node.debug("Subbing now to Heartbeat event");
-                    node.instance.obs.on("Heartbeat", data => {
-                        node.send({payload: removeKebabCases(data)});
-                    });
-                    node.on("close", function(removed, done) {
-                        if (removed) {
-                            node.obs.send("SetHeartbeat", {"enable": false})
-                                .then(() => {return;})
-                                .catch(err => {
-                                    node.warn(err);
-                                });
-                        }
-                        done();
-                    });
-                }).catch(err => {
-                    node.warn(err);
-                });
-            });
-        }
-    }
-    RED.nodes.registerType("obs heartbeat", obs_heartbeat);
-
-//////////////////////////////////////////////////////////////////////////////////////////////
     // obs connection status node
     function obs_connection_status(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.instance = RED.nodes.getNode(config.obsInstance);
-        if (node.instance) {
-            node.instance.on("ConnectionOpened", function () {
-                node.status({fill:"green", shape:"dot", text:"connected"});
-                node.send({payload: "connected"});
+        node.c = RED.nodes.getNode(config.obsInstance);
+        if (node.c) {
+            node.c.on("ConnectionOpened", function () {
+                node.status({fill:"orange", shape:"dot", text:"ConnectionOpened"});
+                node.send({payload: "ConnectionOpened"});
             });
-            node.instance.on("ConnectionClosed", function () {
-                node.status({fill:"red", shape:"dot", text:"disconnected"});
-                node.send({payload: "disconnected"});
+            node.c.on("ConnectionClosed", function () {
+                node.status({fill:"red", shape:"dot", text: "ConnectionClosed"});
+                node.send({payload: "ConnectionClosed"});
             });
-            node.instance.on("AuthenticationFailure", function () {
-                node.status({fill:"red", shape:"dot", text:"Authentication Failure"});
+            node.c.on("AuthenticationFailure", function () {
+                node.status({fill:"red", shape:"dot", text: "AuthenticationFailure"});
                 node.send({payload: "AuthenticationFailure"});
+            });
+            node.c.obs.on("Identified", function () {
+                node.status({fill:"green", shape:"dot", text:"Identified"});
+                node.send({payload: "Identified"});
             });
         } else {
             node.status({fill:"grey", shape:"ring ", text:"no server"});
@@ -223,16 +267,16 @@ module.exports = function(RED) {
     function obs_request_without_data(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.instance = RED.nodes.getNode(config.obsInstance);
-        if (node.instance) {
-            node.on("input", function(msg, send, done) {
-                node.instance.obs.send(config.request, {})
-                .then(data => {
-                    node.send({...msg, payload: removeKebabCases(data)});
-                }).catch(err => {
+        node.c = RED.nodes.getNode(config.obsInstance);
+        if (node.c) {
+            node.on("input", async function(msg, send, done) {
+                try {
+                    const response = await node.c.obs.call(config.request);
+                    node.send({...msg, payload: response});
+                    done();
+                } catch(err) {
                     done(err.error);
-                });
-                done();
+                }
             });
         }
     }
@@ -243,27 +287,24 @@ module.exports = function(RED) {
     function obs_raw_request(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.instance = RED.nodes.getNode(config.obsInstance);
-        if (node.instance) {
-            node.on("input", function(msg, send, done) {
-                let prop = RED.util.evaluateNodeProperty(config.payload, config.payloadType, node, msg);
-                if (typeof prop === "object") {
-                    if (Object.prototype.hasOwnProperty.call(prop, "request-type") && prop["request-type"] !== "") {
-                        let requestType = prop["request-type"];
-                        delete prop.requestType;
-                        node.instance.obs.send(requestType, prop)
-                        .then(data => {
-                            node.send([{...msg, payload: removeKebabCases(data)}, null]);
-                            done();
-                        }).catch(err => {
-                            node.send([null, {...msg, payload: removeKebabCases(err)}]);
-                            done();
-                        });
-                    } else {
-                        done(`Object is missing the "request-type" field or field is empty.`);
+        node.c = RED.nodes.getNode(config.obsInstance);
+        if (node.c) {
+            node.on("input", async function(msg, send, done) {
+                let requestType = RED.util.evaluateNodeProperty(config.reqType, config.reqTypeType, node, msg);
+                let requestData = RED.util.evaluateNodeProperty(config.reqData, config.reqDataType, node, msg);
+
+                if (typeof requestType == "string" && (typeof requestData == "string" || typeof requestData == "object")) {
+                    if (typeof requestData == "string") requestData = {};
+                    try {
+                        const response = await node.c.obs.call(requestType, requestData);
+                        node.send([{...msg, payload: response}, null]);
+                        done();
+                    } catch(err) {
+                        node.send([null, {...msg, payload: err}]);
+                        done(err);
                     }
                 } else {
-                    done(`Wrong data type. Needs to be a valid json object. Is: "${typeof prop}"`);
+                    done(`Wrong data types in request.\nData types currently: Request Type: ${typeof requestType}; Request Data: ${typeof requestData}.\nData types Needed:  Request Type: string; Request Data: object`);
                 }
             });
         }
@@ -271,102 +312,96 @@ module.exports = function(RED) {
     RED.nodes.registerType("obs raw request", obs_raw_request);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-    // obs_SetCurrentScene node
-    function obs_SetCurrentScene(config) {
+    // obs_SetCurrentProgramScene node
+    function obs_SetCurrentProgramScene(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.instance = RED.nodes.getNode(config.obsInstance);
-        if (node.instance) {
-            node.on("input", function(msg, send, done) {
-                let dstScene = null;
+        node.c = RED.nodes.getNode(config.obsInstance);
+        if (node.c) {
+            node.on("input", async function(msg, send, done) {
+                let sceneName = null;
 
-                if (["msg", "flow", "global"].includes(config.sceneType)) {
-                    dstScene = RED.util.evaluateNodeProperty(config.scene, config.sceneType, node, msg);
-                } else if (["str", "sceneName"].includes(config.sceneType) && config.scene !== null && config.scene !== "") {
-                    dstScene = config.scene;
+                // Parse scene name
+                if (["msg", "flow", "global", "str", "sceneName"].includes(config.sceneType)) {
+                    sceneName = RED.util.evaluateNodeProperty(config.scene, config.sceneType, node, msg)
                 } else if (config.sceneType === "jsonata") {
                     try { // Handle this more cleanly then the others for better UX
-                        dstScene = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(config.scene, node), msg);
+                        sceneName = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(config.scene, node), msg);
                     } catch (e) {
                         done(`Invalid JSONata expression: ${e.message}`);
                         return;
                     }
                 }
 
-                if (dstScene) {
-                    node.trace(`parsed destination scene: ${dstScene}`);
-                    node.instance.obs.send("SetCurrentScene", {"scene-name": RED.util.ensureString(dstScene)})
-                    .then(data => {
-                        node.send({...msg, payload: removeKebabCases(data)});
-                    }).catch(err => {
-                        done(err.error);
-                    });
-                } else {
-                    done("Error in scene name");
+                if (typeof sceneName !== "string") {
+                    done(`Scene name data type is invalid. Want: string; Has: ${typeof sceneName}`);
+                    return;
                 }
-                done();
+
+                if (sceneName) {
+                    try {
+                        await node.c.obs.call("SetCurrentProgramScene", {"sceneName": sceneName});
+                        node.send({...msg, payload: sceneName});
+                        done();
+                    } catch(err) {
+                        done(err);
+                    }
+                }
             });
         }
     }
-    RED.nodes.registerType("SetCurrentScene", obs_SetCurrentScene);
+    RED.nodes.registerType("SetCurrentProgramScene", obs_SetCurrentProgramScene);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-    // obs_TransitionToProgram node
-    function obs_TransitionToProgram(config) {
+    // obs_TriggerStudioModeTransition node
+    function obs_TriggerStudioModeTransition(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.instance = RED.nodes.getNode(config.obsInstance);
-        if (node.instance) {
-            node.on("input", function(msg, send, done) {
-                let transitionData = {};
+        node.c = RED.nodes.getNode(config.obsInstance);
+        if (node.c) {
+            node.on("input", async function(msg, send, done) {
+                let transitionName = null;
+                let transitionDuration = null;
 
-                // Parse the optional transition name
-                if (["msg", "flow", "global"].includes(config.transitionType)) {
-                    let transitionName = RED.util.evaluateNodeProperty(config.transition, config.transitionType, node, msg);
-                    transitionData = {"with-transition": {"name": transitionName}};
-                } else if (["str", "transition"].includes(config.transitionType) && config.transition !== null && config.transition !== "") {
-                    transitionData = {"with-transition": {"name": config.transition}};
+                // Parse transition name
+                if (["transition", "msg", "flow", "global"].includes(config.transitionType)) {
+                    transitionName = RED.util.evaluateNodeProperty(config.transition, config.transitionType, node, msg);
+                } else if (["str"].includes(config.transitionType) && config.transition !== null && config.transition !== "") {
+                    transitionName = config.transition;
                 }
 
                 // Parse the optional transition duration
-                if (config.transitionType !== "none") {
+                if (config.transitionType !== "none" && config.transitionTimeType !== "none") {
                     if (["msg", "flow", "global"].includes(config.transitionTimeType)) {
-                        let transitionDuration = RED.util.evaluateNodeProperty(config.transitionTime, config.transitionTimeType, node, msg);
-                        transitionData["with-transition"].duration = Math.abs(parseInt(transitionDuration));
+                        transitionDuration = RED.util.evaluateNodeProperty(config.transitionTime, config.transitionTimeType, node, msg);
                     } else if (config.transitionTimeType === "num") {
-                        transitionData["with-transition"].duration = Math.abs(parseInt(config.transitionTime));
+                        transitionDuration = Math.abs(parseInt(config.transitionTime));
                     } else if (config.transitionTimeType === "jsonata") {
                         try { // Handle this more cleanly then the others for better UX
-                            let duration = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(config.transitionTime, node), msg);
-                            transitionData["with-transition"].duration = Math.abs(parseInt(duration));
+                            transitionDuration = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(config.transitionTime, node), msg);
                         } catch (e) {
                             done(`Invalid JSONata expression: ${e.message}`);
                             return;
                         }
                     }
+                    transitionDuration = Math.abs(parseInt(transitionDuration));
                 }
 
-                node.instance.obs.send("TransitionToProgram", transitionData)
-                .then(data => {
-                    node.send({...msg, payload: removeKebabCases(data)});
-                }).catch(err => {
-                    done(err.error);
-                });
-                node.trace(`transitionData: ${JSON.stringify(transitionData)}`);
-                done();
+                try {
+                    if (transitionName) await node.c.obs.call("SetCurrentSceneTransition", {"transitionName": String(transitionName)});
+                    if (transitionDuration) await node.c.obs.call("SetCurrentSceneTransitionDuration", {"transitionDuration": transitionDuration});
+                    await node.c.obs.call("TriggerStudioModeTransition");
+                    node.send({...msg});
+                    done();
+                } catch(err) {
+                    done(err);
+                }
             });
         }
     }
-    RED.nodes.registerType("TransitionToProgram", obs_TransitionToProgram);
+    RED.nodes.registerType("TriggerStudioModeTransition", obs_TriggerStudioModeTransition);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     // utils
-    function removeKebabCases(obj) {
-        for (const key in obj) {
-            if (key.includes("-")) {
-                delete obj[key];
-            }
-        }
-        return obj;
-    }
+    // Currently no global utils
 };
