@@ -63,13 +63,14 @@
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||this.event||"obs event";
+            return this.name||(this.event.split(",").length==1 && this.event)||"obs events";
         },
         oneditprepare: function() {
-            websocketEventTypes.forEach(function (item) {
-                $("#node-input-event").append($("<option>", {value: item, text: item}));
-            });
-            $("#node-input-event").val(this.event||websocketEventTypes[0]);
+            $("#node-input-event").typedInput({type:"events", types:[{
+                value: "events",
+                multiple: true,
+                options: websocketEventTypes.map(e => { return {value: e, text: e} })
+            }]})
         }
     });
 
@@ -97,7 +98,7 @@
     </div>
     <div class="form-row">
         <label for="node-input-event">Event</label>
-        <select id="node-input-event"></select>
+        <input type="text" id="node-input-event"></select>
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -109,6 +110,10 @@
     <p>This node outputs event messages based on the configured event type.</p>
     <h3>Outputs</h3>
     <ol class="node-ports">
+        <dl class="message-properties">
+            <dt>topic <span class="property-type">string</span></dt>
+            <dd>The event name</dd>
+        </dl>
         <dl class="message-properties">
             <dt>payload <span class="property-type">object</span></dt>
             <dd>The event object as emitted by obs-websocket</dd>

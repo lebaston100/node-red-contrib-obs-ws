@@ -122,11 +122,22 @@ module.exports = function(RED) {
         }
 
         // Register new event subscriptions
-        node.registerEventsub = async function (sub) {
-            if (node.eventSubs.hasOwnProperty(sub)) {
-                node.eventSubs[sub] += 1;
-            } else {
-                node.eventSubs[sub] = 1;
+        node.registerEventsub = async function (subs) {
+            let reidentifyNeeded = false;
+            if (!Array.isArray(subs)) subs = [subs];
+
+            for (const i in subs) {
+                const sub = subs[i];
+                if (node.eventSubs.hasOwnProperty(sub)) {
+                    node.eventSubs[sub] += 1;
+                } else {
+                    node.eventSubs[sub] = 1;
+                    reidentifyNeeded = true;
+                }
+            }
+
+            // Only send reidentify once
+            if (reidentifyNeeded) {
                 node.requestsInFlight += 1;
                 try {
                     if (node.identified) await node.obs.reidentify(getEventSubs());
@@ -135,26 +146,41 @@ module.exports = function(RED) {
                 }
                 node.requestsInFlight -= 1;
             }
+
+            node.trace(JSON.stringify(node.eventSubs));
         }
 
         // Unregister event subscriptions
-        node.unRegisterEventsub = async function (sub) {
-            if (node.eventSubs.hasOwnProperty(sub)) {
-                node.eventSubs[sub] -= 1;
-                if (node.eventSubs[sub] == 0) {
-                    node.trace(`EventSubscription ${sub} reached 0, deleting and unregistering`)
-                    delete node.eventSubs[sub];
-                    node.requestsInFlight += 1;
-                    try {
-                        if (node.identified) await node.obs.reidentify(getEventSubs());
-                    } catch (err) {
-                        node.error(err);
+        node.unRegisterEventsub = async function (subs) {
+            let reidentifyNeeded = false;
+            if (!Array.isArray(subs)) subs = [subs];
+
+            for (const i in subs) {
+                const sub = subs[i];
+                if (node.eventSubs.hasOwnProperty(sub)) {
+                    node.eventSubs[sub] -= 1;
+                    if (node.eventSubs[sub] == 0) {
+                        node.trace(`EventSubscription ${sub} reached 0, deleting and unregistering`)
+                        delete node.eventSubs[sub];
+                        reidentifyNeeded = true;
                     }
-                    node.requestsInFlight -= 1;
+                } else {
+                    node.error("Event subcription is not there. Was it registered?");
                 }
-            } else {
-                node.error("Event subcription is not there. Was it registered?");
             }
+
+            // Only send reidentify once
+            if (reidentifyNeeded) {
+                node.requestsInFlight += 1;
+                try {
+                    if (node.identified) await node.obs.reidentify(getEventSubs());
+                } catch (err) {
+                    node.error(err);
+                }
+                node.requestsInFlight -= 1;
+            }
+
+            node.trace(JSON.stringify(node.eventSubs));
         }
 
         // Internal function to resolve my event sub object to something obs-websocket can understand
@@ -208,27 +234,35 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         var node = this;
         node.c = RED.nodes.getNode(config.obsInstance);
-        const highVolumeEvents = ["InputVolumeMeters", "InputActiveStateChanged", "InputShowStateChanged", "SceneItemTransformChanged"];
         if (node.c) {
+            let requestedEvents = config.event.split(",");
+            let requestedHighVolumeEvents = [];
             // check if is high volume event and update sub manager
-            if (highVolumeEvents.includes(config.event)) {
-                node.trace(`The event ${config.event} is a high volume event. Updating event reg.`);
+            for (const eventName in requestedEvents) {
+                const event = requestedEvents[eventName];
+
+                if (Object.keys(EventSubscription).includes(event)) requestedHighVolumeEvents.push(event);
+
+                // Register obs event listener
+                node.c.obs.on(event, data => {
+                    node.send({topic: event, payload: data});
+                });
+            }
+
+            // Handle high volume event reg and unreg
+            if (requestedHighVolumeEvents.length) {
+                node.trace(`${requestedHighVolumeEvents} ${requestedHighVolumeEvents.length>1 ? "are high volume events" : "is a high volume event"}. Updating event reg.`);
                 setTimeout(async () => {
-                    await node.c.registerEventsub(config.event);
+                    await node.c.registerEventsub(requestedHighVolumeEvents);
                 }, 1);
 
                 // node-red node closing we need to handle in this case
                 node.on("close", async (done) => {
-                    await node.c.unRegisterEventsub(config.event);
+                    await node.c.unRegisterEventsub(requestedHighVolumeEvents);
                     node.trace("Done closing event node instance");
                     done();
                 });
             }
-
-            // Register obs event listener
-            node.c.obs.on(config.event, data => {
-                node.send({topic: config.event, payload: data});
-            });
         }
     }
     RED.nodes.registerType("obs event", obs_event);
