@@ -66,11 +66,23 @@
             return this.name||(this.event.split(",").length==1 && this.event)||"obs events";
         },
         oneditprepare: function() {
-            $("#node-input-event").typedInput({type:"events", types:[{
-                value: "events",
+            $("#node-input-event").typedInput({type:"event", types:[{
+                value: "event",
                 multiple: true,
                 options: websocketEventTypes.map(e => { return {value: e, text: e} })
-            }]})
+            }]});
+
+            // Handle docs button click
+            $("#node-input-windowBlockedText").hide();
+            $("#node-input-event").on("change", function(event, type, value) {
+                $("#node-input-obsws-docs").off("click");
+                $("#node-input-obsws-docs").on("click", function() {
+                    value.split(",").forEach(prop => {
+                        let win = window.open(`https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#${prop.toLowerCase()}`, "_blank");
+                        if (!win) $("#node-input-windowBlockedText").show();
+                    });
+                })
+            });
         }
     });
 
@@ -98,7 +110,11 @@
     </div>
     <div class="form-row">
         <label for="node-input-event">Event</label>
-        <input type="text" id="node-input-event"></select>
+        <input type="text" id="node-input-event" style="width: calc(70.5% - 47px);"></select>
+        <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
+    </div>
+    <div class="form-tips" id="node-input-windowBlockedText">
+        <b>Attention:</b> Some documentation pages could not be opened, make sure to allow popups for this page.
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -193,6 +209,16 @@
                 $("#node-input-request").append($("<option>", {value: item, text: item}));
             });
             $("#node-input-request").val(this.request||websocketNoDataRequestTypes[0]);
+
+            // Handle docs button click
+            $("#node-input-windowBlockedText").hide();
+            $("#node-input-request").on("change", function(event) {
+                $("#node-input-obsws-docs").off("click");
+                $("#node-input-obsws-docs").on("click", function() {
+                    let win = window.open(`https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#${event.currentTarget.value.toLowerCase()}`, "_blank");
+                    if (!win) $("#node-input-windowBlockedText").show();
+                })
+            });
         }
     });
 
@@ -216,7 +242,13 @@
     </div>
     <div class="form-row">
         <label for="node-input-request">Request</label>
-        <select id="node-input-request"></select>
+        <div style="width: 70%; display: inline-flex;">
+            <select id="node-input-request" style="flex-grow: 1;"></select>
+            <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
+        </div>
+    </div>
+    <div class="form-tips" id="node-input-windowBlockedText">
+        <b>Attention:</b> Some documentation pages could not be opened, make sure to allow popups for this page.
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -294,13 +326,29 @@
 
             // Initialize typedInput for requestData
             $("#node-input-reqData").typedInput({
-                types: [noneTypeDef,"msg", "flow", "global", "json"],
+                types: [noneTypeDef, "msg", "flow", "global", "json"],
                 typeField: $("#node-input-reqDataType")
             });
             // Set default values if none set
             if (!this.reqData) {
                 $("#node-input-reqData").typedInput("type", "none");
             }
+
+            // Handle docs button click
+            $("#node-input-windowBlockedText").hide();
+            $("#node-input-reqType").on("change", function(event, type, value) {
+                $("#node-input-obsws-docs").off("click");
+                if (["str", "requestName"].includes(type)) {
+                    $("#node-input-reqType").next('.red-ui-typedInput-container').css("width", "calc(70.5% - 47px)");
+                    $("#node-input-obsws-docs").on("click", function() {
+                        let win = window.open(`https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#${value.toLowerCase()}`, "_blank");
+                        if (!win) $("#node-input-windowBlockedText").show();
+                    });
+                } else {
+                    $("#node-input-reqType").next('.red-ui-typedInput-container').css("width", "70%");
+                    $("#node-input-obsws-docs").hide();
+                }
+            });
         }
     });
 
@@ -345,6 +393,10 @@
         <label for="node-input-payload">Request Type</label>
         <input type="text" id="node-input-reqType" style="width:70%">
         <input type="hidden" id="node-input-reqTypeType">
+        <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
+    </div>
+    <div class="form-tips" id="node-input-windowBlockedText">
+        <b>Attention:</b> Some documentation pages could not be opened, make sure to allow popups for this page.
     </div>
     <div class="form-row">
         <label for="node-input-payload">Request Data</label>
