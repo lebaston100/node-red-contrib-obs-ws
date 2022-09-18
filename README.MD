@@ -20,7 +20,7 @@ Manual install:
 
 ## Use
 
-Basic node-red usage is expected as basic knowledge. All nodes are documented inside the internal node-red node help tool with a little more detail.  
+Basic node-red usage is expected as basic knowledge. All nodes are documented inside the internal node-red node help tool with a little more detail.
 For a complete documentation over the messages that can be used, look at the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md).  
 Only obs-websocket versions >= 5 are supported aka OBS 28 and up.
 
@@ -53,9 +53,15 @@ An example flow is provided which can be simply added by using the import -> exa
 ### Changelog
 
 **0.1.0:**
-Reworked ~70% of the code. First production ready release and finally listed on npm.
+- Reworked ~70% of the code. First production ready release and finally listed on npm.
 
 **0.2.0**
-Rewrote large parts again to support OBS 28 which now ships with obs-websocket 5 by default.
+- Rewrote large parts again to support OBS 28 which now ships with obs-websocket 5 by default.
+
+**0.2.1**
+- Improved display name of raw request node
+- Added request selection option to raw request node
+- Added multiselect to obs-event node
+- Added obs-websocket docs button to nodes where an event/request is used
 
 **This project is not affiliated with the OBS Project or obs-websocket**
