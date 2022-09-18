@@ -267,11 +267,18 @@
                 hasValue: false,
                 icon: "fa fa-times-circle-o"
             };
+            let requestsTypeDef = {
+                    value: "requestName",
+                    label: "Request",
+                    hasValue: false,
+                    icon: "fa fa-list",
+                    options: websocketAllRequestTypes
+            };
 
             // Initialize typedInput for requestType
             $("#node-input-reqType").typedInput({
                 default: "msg",
-                types: ["str","msg","flow","global"],
+                types: ["str", requestsTypeDef, "msg", "flow", "global"],
                 typeField: $("#node-input-reqTypeType")
             });
             // Set default values if none set
@@ -282,7 +289,7 @@
 
             // Initialize typedInput for requestData
             $("#node-input-reqData").typedInput({
-                types: [noneTypeDef,"msg","flow","global","json"],
+                types: [noneTypeDef,"msg", "flow", "global", "json"],
                 typeField: $("#node-input-reqDataType")
             });
             // Set default values if none set
@@ -291,6 +298,37 @@
             }
         }
     });
+
+    const websocketAllRequestTypes = [
+            "GetPersistentData", "SetPersistentData", "GetSceneCollectionList", "SetCurrentSceneCollection",
+            "CreateSceneCollection", "GetProfileList", "SetCurrentProfile", "CreateProfile", "RemoveProfile", "GetProfileParameter",
+            "SetProfileParameter", "GetVideoSettings", "SetVideoSettings", "GetStreamServiceSettings", "SetStreamServiceSettings",
+            "GetRecordDirectory", "GetSourceFilterList", "GetSourceFilterDefaultSettings", "CreateSourceFilter",
+            "RemoveSourceFilter", "SetSourceFilterName", "GetSourceFilter", "SetSourceFilterIndex", "SetSourceFilterSettings",
+            "SetSourceFilterEnabled", "GetVersion", "GetStats", "BroadcastCustomEvent", "CallVendorRequest", "GetHotkeyList",
+            "TriggerHotkeyByName", "TriggerHotkeyByKeySequence", "Sleep", "GetInputList", "GetInputKindList", "GetSpecialInputs",
+            "CreateInput", "RemoveInput", "SetInputName", "GetInputDefaultSettings", "GetInputSettings", "SetInputSettings",
+            "GetInputMute", "SetInputMute", "ToggleInputMute", "GetInputVolume", "SetInputVolume", "GetInputAudioBalance",
+            "SetInputAudioBalance", "GetInputAudioSyncOffset", "SetInputAudioSyncOffset", "GetInputAudioMonitorType",
+            "SetInputAudioMonitorType", "GetInputAudioTracks", "SetInputAudioTracks", "GetInputPropertiesListPropertyItems",
+            "PressInputPropertiesButton", "GetMediaInputStatus", "SetMediaInputCursor", "OffsetMediaInputCursor",
+            "TriggerMediaInputAction", "GetVirtualCamStatus", "ToggleVirtualCam", "StartVirtualCam", "StopVirtualCam",
+            "GetReplayBufferStatus", "ToggleReplayBuffer", "StartReplayBuffer", "StopReplayBuffer", "SaveReplayBuffer",
+            "GetLastReplayBufferReplay", "GetOutputList", "GetOutputStatus", "ToggleOutput", "StartOutput", "StopOutput",
+            "GetOutputSettings", "SetOutputSettings", "GetRecordStatus", "ToggleRecord", "StartRecord", "StopRecord",
+            "ToggleRecordPause", "PauseRecord", "ResumeRecord", "GetSceneItemList", "GetGroupSceneItemList", "GetSceneItemId",
+            "CreateSceneItem", "RemoveSceneItem", "DuplicateSceneItem", "GetSceneItemTransform", "SetSceneItemTransform",
+            "GetSceneItemEnabled", "SetSceneItemEnabled", "GetSceneItemLocked", "SetSceneItemLocked", "GetSceneItemIndex",
+            "SetSceneItemIndex", "GetSceneItemBlendMode", "SetSceneItemBlendMode", "GetSceneList", "GetGroupList",
+            "GetCurrentProgramScene", "SetCurrentProgramScene", "GetCurrentPreviewScene", "SetCurrentPreviewScene",
+            "CreateScene", "RemoveScene", "SetSceneName", "GetSceneSceneTransitionOverride", "SetSceneSceneTransitionOverride",
+            "GetSourceActive", "GetSourceScreenshot", "SaveSourceScreenshot", "GetStreamStatus", "ToggleStream",
+            "StartStream", "StopStream", "SendStreamCaption", "GetTransitionKindList", "GetSceneTransitionList",
+            "GetCurrentSceneTransition", "SetCurrentSceneTransition", "SetCurrentSceneTransitionDuration",
+            "SetCurrentSceneTransitionSettings", "GetCurrentSceneTransitionCursor", "TriggerStudioModeTransition",
+            "SetTBarPosition", "GetStudioModeEnabled", "SetStudioModeEnabled", "OpenInputPropertiesDialog", "OpenInputFiltersDialog",
+            "OpenInputInteractDialog", "GetMonitorList", "OpenVideoMixProjector", "OpenSourceProjector",
+    ];
 </script>
 
 <script type="text/html" data-template-name="obs raw request">
@@ -376,7 +414,7 @@
             let sceneTypedInputObj = {
                 default: "Scene",
                 typeField: $("#node-input-sceneType"),
-                types: [scenesTypeDef, "str","jsonata","msg","flow","global"]
+                types: [scenesTypeDef, "str", "jsonata", "msg", "flow", "global"]
             }
 
             // Hide/show warning messages as needed
