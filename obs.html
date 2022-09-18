@@ -258,7 +258,7 @@
         icon: "font-awesome/fa-cogs",
         outputLabels: ["result", "error"],
         label: function() {
-            return this.name||"obs raw request";
+            return this.name || (this.reqTypeType == "str" && this.reqType) || "obs raw request";
         },
         oneditprepare: function() {
             let noneTypeDef = {
