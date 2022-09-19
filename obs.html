@@ -335,15 +335,17 @@
             }
 
             // Handle docs button click
+            const obsWsDocsUrl = "https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md";
             $("#node-input-windowBlockedText").hide();
             $("#node-input-reqType").on("change", function(event, type, value) {
                 $("#node-input-obsws-docs").off("click");
                 if (["str", "requestName"].includes(type)) {
                     $("#node-input-reqType").next('.red-ui-typedInput-container').css("width", "calc(70.5% - 47px)");
                     $("#node-input-obsws-docs").on("click", function() {
-                        let win = window.open(`https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#${value.toLowerCase()}`, "_blank");
+                        let win = window.open(`${obsWsDocsUrl}#${websocketAllRequestTypes.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
                         if (!win) $("#node-input-windowBlockedText").show();
                     });
+                    $("#node-input-obsws-docs").show();
                 } else {
                     $("#node-input-reqType").next('.red-ui-typedInput-container').css("width", "70%");
                     $("#node-input-obsws-docs").hide();
