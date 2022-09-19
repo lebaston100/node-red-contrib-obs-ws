@@ -24,6 +24,7 @@ async def loadGithubJson() -> None:
                 outputText += "\n\t"
             outputText += f'"{event["eventType"]}", '
             charsInLine += len(event["eventType"])
+        outputText = outputText[:-2]
         outputText += "\n];"
         print(outputText)
 

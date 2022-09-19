@@ -27,6 +27,7 @@ async def loadGithubJson() -> None:
                 outputText += "\n\t"
             outputText += f'"{requestType}", '
             charsInLine += len(requestType)
+        outputText = outputText[:-2]
         outputText += "\n];"
         print(outputText)
 
