@@ -339,17 +339,10 @@
             $("#node-input-windowBlockedText").hide();
             $("#node-input-reqType").on("change", function(event, type, value) {
                 $("#node-input-obsws-docs").off("click");
-                if (["str", "requestName"].includes(type)) {
-                    $("#node-input-reqType").next('.red-ui-typedInput-container').css("width", "calc(70.5% - 47px)");
-                    $("#node-input-obsws-docs").on("click", function() {
-                        let win = window.open(`${obsWsDocsUrl}#${websocketAllRequestTypes.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
-                        if (!win) $("#node-input-windowBlockedText").show();
-                    });
-                    $("#node-input-obsws-docs").show();
-                } else {
-                    $("#node-input-reqType").next('.red-ui-typedInput-container').css("width", "70%");
-                    $("#node-input-obsws-docs").hide();
-                }
+                $("#node-input-obsws-docs").on("click", function() {
+                    let win = window.open(`${obsWsDocsUrl}#${["str", "requestName"].includes(type) && websocketAllRequestTypes.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
+                    if (!win) $("#node-input-windowBlockedText").show();
+                });
             });
         }
     });
@@ -393,12 +386,12 @@
     </div>
     <div class="form-row">
         <label for="node-input-payload">Request Type</label>
-        <input type="text" id="node-input-reqType" style="width:70%">
+        <input type="text" id="node-input-reqType" style="width:calc(70.5% - 47px)">
         <input type="hidden" id="node-input-reqTypeType">
         <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
     </div>
     <div class="form-tips" id="node-input-windowBlockedText">
-        <b>Attention:</b> Some documentation pages could not be opened, make sure to allow popups for this page.
+        <b>Attention:</b> The documentation page could not be opened, make sure to allow popups for this page.
     </div>
     <div class="form-row">
         <label for="node-input-payload">Request Data</label>
