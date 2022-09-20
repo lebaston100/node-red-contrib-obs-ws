@@ -1,3 +1,3 @@
 A few little helper tools to make updating requests and events easier.
 
-pip install aiohttp
+pip install aiohttp pyperclip

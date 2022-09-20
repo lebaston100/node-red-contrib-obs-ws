@@ -1,6 +1,7 @@
 import asyncio
 import aiohttp
-import logging
+import pyperclip
+import json
 
 """Generate the available obs types and format them as a javascript array"""
 
@@ -17,16 +18,18 @@ async def loadGithubJson() -> None:
         #print(json.dumps(response["events"], indent=2, sort_keys=True))
 
         charsInLine = 0
-        outputText = "const websocketEventTypes = [\n\t"
+        outputText = "const websocketEventTypes = [\n        "
         for event in response["events"]:
             if charsInLine > 80:
                 charsInLine = 0
-                outputText += "\n\t"
-            outputText += f'"{event["eventType"]}", '
+                outputText += "\n        "
+            outputText += f'"{event["eventType"]}",'
             charsInLine += len(event["eventType"])
-        outputText = outputText[:-2]
-        outputText += "\n];"
+
+        outputText = outputText[:-1].rstrip()
+        outputText += "\n    ];"
         print(outputText)
+        pyperclip.copy(outputText)
 
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 loop = asyncio.get_event_loop()
