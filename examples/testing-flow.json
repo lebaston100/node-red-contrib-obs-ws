@@ -23,57 +23,6 @@
         ]
     },
     {
-        "id": "1adf224b1005906c",
-        "type": "inject",
-        "z": "2244947cb7d05f1c",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            },
-            {
-                "p": "custom",
-                "v": "some custom thing",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "some topic",
-        "payload": "",
-        "payloadType": "date",
-        "x": 180,
-        "y": 460,
-        "wires": [
-            [
-                "3281ac88e71ae0e4"
-            ]
-        ]
-    },
-    {
-        "id": "adde11170324bc78",
-        "type": "debug",
-        "z": "2244947cb7d05f1c",
-        "name": "no data request",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 940,
-        "y": 460,
-        "wires": []
-    },
-    {
         "id": "eebc07cde2cd0541",
         "type": "obs connection status",
         "z": "2244947cb7d05f1c",
@@ -122,42 +71,6 @@
         "wires": []
     },
     {
-        "id": "3281ac88e71ae0e4",
-        "type": "obs request without data",
-        "z": "2244947cb7d05f1c",
-        "name": "",
-        "request": "GetHotkeyList",
-        "obsInstance": "fa8533d825b63e4a",
-        "x": 500,
-        "y": 460,
-        "wires": [
-            [
-                "adde11170324bc78"
-            ]
-        ]
-    },
-    {
-        "id": "8934fc175e86d54f",
-        "type": "obs raw request",
-        "z": "2244947cb7d05f1c",
-        "name": "Type=msg.topic | Data=None",
-        "reqType": "topic",
-        "reqTypeType": "msg",
-        "reqData": "",
-        "reqDataType": "none",
-        "obsInstance": "fa8533d825b63e4a",
-        "x": 540,
-        "y": 600,
-        "wires": [
-            [
-                "381b0d98668793b8"
-            ],
-            [
-                "ed9c2af3904a8dee"
-            ]
-        ]
-    },
-    {
         "id": "be5a31bfbd18b223",
         "type": "inject",
         "z": "2244947cb7d05f1c",
@@ -172,12 +85,12 @@
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
-        "topic": "GetSpecialInputs",
-        "x": 170,
-        "y": 600,
+        "topic": "",
+        "x": 130,
+        "y": 500,
         "wires": [
             [
-                "8934fc175e86d54f"
+                "b7eb5429e9450ce4"
             ]
         ]
     },
@@ -185,7 +98,7 @@
         "id": "381b0d98668793b8",
         "type": "debug",
         "z": "2244947cb7d05f1c",
-        "name": "raw request result",
+        "name": "request result",
         "active": true,
         "tosidebar": true,
         "console": false,
@@ -194,15 +107,15 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 950,
-        "y": 640,
+        "x": 940,
+        "y": 560,
         "wires": []
     },
     {
         "id": "ed9c2af3904a8dee",
         "type": "debug",
         "z": "2244947cb7d05f1c",
-        "name": "raw request error",
+        "name": "request error",
         "active": true,
         "tosidebar": true,
         "console": false,
@@ -211,30 +124,9 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 950,
-        "y": 680,
+        "x": 930,
+        "y": 620,
         "wires": []
-    },
-    {
-        "id": "96a967ef0ab8b4c4",
-        "type": "obs raw request",
-        "z": "2244947cb7d05f1c",
-        "name": "Type=String | Data=json",
-        "reqType": "SetStudioModeEnabled",
-        "reqTypeType": "str",
-        "reqData": "{\"studioModeEnabled\":true}",
-        "reqDataType": "json",
-        "obsInstance": "fa8533d825b63e4a",
-        "x": 530,
-        "y": 640,
-        "wires": [
-            [
-                "381b0d98668793b8"
-            ],
-            [
-                "ed9c2af3904a8dee"
-            ]
-        ]
     },
     {
         "id": "12f78d28e4aae8ab",
@@ -254,31 +146,10 @@
         "payload": "",
         "payloadType": "date",
         "x": 140,
-        "y": 640,
+        "y": 540,
         "wires": [
             [
-                "96a967ef0ab8b4c4"
-            ]
-        ]
-    },
-    {
-        "id": "7feeb1af03640e66",
-        "type": "obs raw request",
-        "z": "2244947cb7d05f1c",
-        "name": "Invlid Request Type",
-        "reqType": "SetStudioModeEnable",
-        "reqTypeType": "str",
-        "reqData": "{\"studioModeEnabled\":true}",
-        "reqDataType": "json",
-        "obsInstance": "fa8533d825b63e4a",
-        "x": 510,
-        "y": 800,
-        "wires": [
-            [
-                "381b0d98668793b8"
-            ],
-            [
-                "ed9c2af3904a8dee"
+                "fca91c9780151d15"
             ]
         ]
     },
@@ -300,31 +171,10 @@
         "payload": "",
         "payloadType": "date",
         "x": 150,
-        "y": 800,
+        "y": 700,
         "wires": [
             [
-                "7feeb1af03640e66"
-            ]
-        ]
-    },
-    {
-        "id": "c9c27f2c94426339",
-        "type": "obs raw request",
-        "z": "2244947cb7d05f1c",
-        "name": "Invalid data type for \"Type\"",
-        "reqType": "payload",
-        "reqTypeType": "msg",
-        "reqData": "{\"studioModeEnabled\":true}",
-        "reqDataType": "json",
-        "obsInstance": "fa8533d825b63e4a",
-        "x": 540,
-        "y": 840,
-        "wires": [
-            [
-                "381b0d98668793b8"
-            ],
-            [
-                "ed9c2af3904a8dee"
+                "e6d0a59bfd65958c"
             ]
         ]
     },
@@ -346,10 +196,10 @@
         "payload": "",
         "payloadType": "date",
         "x": 150,
-        "y": 840,
+        "y": 740,
         "wires": [
             [
-                "c9c27f2c94426339"
+                "5c1ba2f12e701c6e"
             ]
         ]
     },
@@ -362,7 +212,7 @@
         "sceneType": "sceneName",
         "obsInstance": "fa8533d825b63e4a",
         "x": 490,
-        "y": 980,
+        "y": 880,
         "wires": [
             [
                 "43ab21419d7d34c5"
@@ -396,7 +246,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 180,
-        "y": 980,
+        "y": 880,
         "wires": [
             [
                 "d78ee75e195c92ab"
@@ -417,7 +267,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 970,
-        "y": 980,
+        "y": 880,
         "wires": []
     },
     {
@@ -429,7 +279,7 @@
         "sceneType": "msg",
         "obsInstance": "fa8533d825b63e4a",
         "x": 520,
-        "y": 1020,
+        "y": 920,
         "wires": [
             [
                 "43ab21419d7d34c5"
@@ -463,7 +313,7 @@
         "payload": "Scene 3",
         "payloadType": "str",
         "x": 170,
-        "y": 1020,
+        "y": 920,
         "wires": [
             [
                 "7dedadcf4801b85f"
@@ -479,7 +329,7 @@
         "sceneType": "str",
         "obsInstance": "fa8533d825b63e4a",
         "x": 490,
-        "y": 1060,
+        "y": 960,
         "wires": [
             [
                 "43ab21419d7d34c5"
@@ -513,7 +363,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 180,
-        "y": 1060,
+        "y": 960,
         "wires": [
             [
                 "47f01db2b83e02d3"
@@ -529,7 +379,7 @@
         "sceneType": "jsonata",
         "obsInstance": "fa8533d825b63e4a",
         "x": 480,
-        "y": 1100,
+        "y": 1000,
         "wires": [
             [
                 "43ab21419d7d34c5"
@@ -563,7 +413,7 @@
         "payload": "Scene 1",
         "payloadType": "str",
         "x": 170,
-        "y": 1100,
+        "y": 1000,
         "wires": [
             [
                 "121fec5d1e87152e"
@@ -579,7 +429,7 @@
         "sceneType": "msg",
         "obsInstance": "fa8533d825b63e4a",
         "x": 520,
-        "y": 1220,
+        "y": 1120,
         "wires": [
             [
                 "43ab21419d7d34c5"
@@ -613,7 +463,7 @@
         "payload": "true",
         "payloadType": "bool",
         "x": 160,
-        "y": 1220,
+        "y": 1120,
         "wires": [
             [
                 "eb90b2a50fac8a11"
@@ -629,7 +479,7 @@
         "sceneType": "jsonata",
         "obsInstance": "fa8533d825b63e4a",
         "x": 500,
-        "y": 1180,
+        "y": 1080,
         "wires": [
             [
                 "43ab21419d7d34c5"
@@ -663,7 +513,7 @@
         "payload": "Scene 1",
         "payloadType": "str",
         "x": 170,
-        "y": 1180,
+        "y": 1080,
         "wires": [
             [
                 "fc594a4c7a55fd8d"
@@ -681,7 +531,7 @@
         "transitionTimeType": "num",
         "obsInstance": "fa8533d825b63e4a",
         "x": 530,
-        "y": 1360,
+        "y": 1260,
         "wires": [
             [
                 "4361d77bdf1d6876"
@@ -715,7 +565,7 @@
         "payload": "Scene 3",
         "payloadType": "str",
         "x": 170,
-        "y": 1360,
+        "y": 1260,
         "wires": [
             [
                 "dc2c71a47f50411d"
@@ -736,7 +586,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 980,
-        "y": 1360,
+        "y": 1260,
         "wires": []
     },
     {
@@ -750,7 +600,7 @@
         "transitionTimeType": "none",
         "obsInstance": "fa8533d825b63e4a",
         "x": 580,
-        "y": 1400,
+        "y": 1300,
         "wires": [
             [
                 "4361d77bdf1d6876"
@@ -768,7 +618,7 @@
         "transitionTimeType": "none",
         "obsInstance": "fa8533d825b63e4a",
         "x": 550,
-        "y": 1440,
+        "y": 1340,
         "wires": [
             [
                 "4361d77bdf1d6876"
@@ -786,7 +636,7 @@
         "transitionTimeType": "num",
         "obsInstance": "fa8533d825b63e4a",
         "x": 580,
-        "y": 1480,
+        "y": 1380,
         "wires": [
             [
                 "4361d77bdf1d6876"
@@ -820,7 +670,7 @@
         "payload": "Scene 3",
         "payloadType": "str",
         "x": 170,
-        "y": 1400,
+        "y": 1300,
         "wires": [
             [
                 "69762970b19f1c89"
@@ -854,7 +704,7 @@
         "payload": "Scene 3",
         "payloadType": "str",
         "x": 170,
-        "y": 1440,
+        "y": 1340,
         "wires": [
             [
                 "38d5a7e441b0545d"
@@ -888,7 +738,7 @@
         "payload": "Fade",
         "payloadType": "str",
         "x": 160,
-        "y": 1480,
+        "y": 1380,
         "wires": [
             [
                 "39ff25ada7dbdee9"
@@ -906,7 +756,7 @@
         "transitionTimeType": "jsonata",
         "obsInstance": "fa8533d825b63e4a",
         "x": 570,
-        "y": 1560,
+        "y": 1460,
         "wires": [
             [
                 "4361d77bdf1d6876"
@@ -941,7 +791,7 @@
         "payload": "Fade",
         "payloadType": "str",
         "x": 130,
-        "y": 1560,
+        "y": 1460,
         "wires": [
             [
                 "e8949e80eb0b90f7"
@@ -969,23 +819,13 @@
         "wires": []
     },
     {
-        "id": "adaaf92586b64fb8",
-        "type": "comment",
-        "z": "2244947cb7d05f1c",
-        "name": "obs request without data",
-        "info": "",
-        "x": 170,
-        "y": 400,
-        "wires": []
-    },
-    {
         "id": "e2e6d40d7f8edf57",
         "type": "comment",
         "z": "2244947cb7d05f1c",
         "name": "obs raw request",
         "info": "",
         "x": 140,
-        "y": 540,
+        "y": 400,
         "wires": []
     },
     {
@@ -995,7 +835,7 @@
         "name": "SetCurrentProgramScene",
         "info": "",
         "x": 170,
-        "y": 920,
+        "y": 820,
         "wires": []
     },
     {
@@ -1005,7 +845,7 @@
         "name": "TriggerStudioModeTransition",
         "info": "",
         "x": 180,
-        "y": 1300,
+        "y": 1200,
         "wires": []
     },
     {
@@ -1020,27 +860,6 @@
         "wires": [
             [
                 "991798c24ea05213"
-            ]
-        ]
-    },
-    {
-        "id": "6d1112ca59c0ced8",
-        "type": "obs raw request",
-        "z": "2244947cb7d05f1c",
-        "name": "Type=msg.topic | Data=msg.payload",
-        "reqType": "topic",
-        "reqTypeType": "msg",
-        "reqData": "payload",
-        "reqDataType": "msg",
-        "obsInstance": "fa8533d825b63e4a",
-        "x": 570,
-        "y": 680,
-        "wires": [
-            [
-                "381b0d98668793b8"
-            ],
-            [
-                "ed9c2af3904a8dee"
             ]
         ]
     },
@@ -1066,10 +885,10 @@
         "payload": "{\"inputName\":\"Image\"}",
         "payloadType": "json",
         "x": 180,
-        "y": 680,
+        "y": 580,
         "wires": [
             [
-                "6d1112ca59c0ced8"
+                "7be4ebe88b4099c1"
             ]
         ]
     },
@@ -1091,25 +910,25 @@
         "payload": "",
         "payloadType": "date",
         "x": 140,
-        "y": 720,
+        "y": 620,
         "wires": [
             [
-                "de4636a6f187a9fb"
+                "d79a441a8e17de19"
             ]
         ]
     },
     {
-        "id": "de4636a6f187a9fb",
-        "type": "obs raw request",
+        "id": "b7eb5429e9450ce4",
+        "type": "obs request",
         "z": "2244947cb7d05f1c",
-        "name": "Type=Request | Data=json",
-        "reqType": "SetStudioModeEnabled",
+        "name": "",
+        "reqType": "GetHotkeyList",
         "reqTypeType": "requestName",
-        "reqData": "{\"studioModeEnabled\":true}",
-        "reqDataType": "json",
+        "reqData": "",
+        "reqDataType": "none",
         "obsInstance": "fa8533d825b63e4a",
-        "x": 540,
-        "y": 720,
+        "x": 500,
+        "y": 500,
         "wires": [
             [
                 "381b0d98668793b8"
@@ -1120,9 +939,192 @@
         ]
     },
     {
+        "id": "fca91c9780151d15",
+        "type": "obs request",
+        "z": "2244947cb7d05f1c",
+        "name": "Type=String | Data=json",
+        "reqType": "SetStudioModeEnabled",
+        "reqTypeType": "str",
+        "reqData": "{\"studioModeEnabled\":true}",
+        "reqDataType": "json",
+        "obsInstance": "fa8533d825b63e4a",
+        "x": 530,
+        "y": 540,
+        "wires": [
+            [
+                "381b0d98668793b8"
+            ],
+            [
+                "ed9c2af3904a8dee"
+            ]
+        ]
+    },
+    {
+        "id": "7be4ebe88b4099c1",
+        "type": "obs request",
+        "z": "2244947cb7d05f1c",
+        "name": "Type=msg.topic | Data=msg.payload",
+        "reqType": "topic",
+        "reqTypeType": "msg",
+        "reqData": "payload",
+        "reqDataType": "msg",
+        "obsInstance": "fa8533d825b63e4a",
+        "x": 570,
+        "y": 580,
+        "wires": [
+            [
+                "381b0d98668793b8"
+            ],
+            [
+                "ed9c2af3904a8dee"
+            ]
+        ]
+    },
+    {
+        "id": "d79a441a8e17de19",
+        "type": "obs request",
+        "z": "2244947cb7d05f1c",
+        "name": "Type=Request | Data=json",
+        "reqType": "SetStudioModeEnabled",
+        "reqTypeType": "requestName",
+        "reqData": "{\"studioModeEnabled\":true}",
+        "reqDataType": "json",
+        "obsInstance": "fa8533d825b63e4a",
+        "x": 540,
+        "y": 620,
+        "wires": [
+            [
+                "381b0d98668793b8"
+            ],
+            [
+                "ed9c2af3904a8dee"
+            ]
+        ]
+    },
+    {
+        "id": "b654d03875826ea8",
+        "type": "inject",
+        "z": "2244947cb7d05f1c",
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "GetRecordStatus",
+        "x": 170,
+        "y": 460,
+        "wires": [
+            [
+                "931057f7bb10c343"
+            ]
+        ]
+    },
+    {
+        "id": "931057f7bb10c343",
+        "type": "obs request",
+        "z": "2244947cb7d05f1c",
+        "name": "Type=msg.topic | Data=None",
+        "reqType": "topic",
+        "reqTypeType": "msg",
+        "reqData": "",
+        "reqDataType": "none",
+        "obsInstance": "fa8533d825b63e4a",
+        "x": 540,
+        "y": 460,
+        "wires": [
+            [
+                "381b0d98668793b8"
+            ],
+            [
+                "ed9c2af3904a8dee"
+            ]
+        ]
+    },
+    {
+        "id": "e6d0a59bfd65958c",
+        "type": "obs request",
+        "z": "2244947cb7d05f1c",
+        "name": "Invalid Request Type",
+        "reqType": "InvalidRequest",
+        "reqTypeType": "str",
+        "reqData": "",
+        "reqDataType": "none",
+        "obsInstance": "fa8533d825b63e4a",
+        "x": 520,
+        "y": 700,
+        "wires": [
+            [
+                "381b0d98668793b8"
+            ],
+            [
+                "ed9c2af3904a8dee"
+            ]
+        ]
+    },
+    {
+        "id": "5c1ba2f12e701c6e",
+        "type": "obs request",
+        "z": "2244947cb7d05f1c",
+        "name": "Invalid data type for \"Data\"",
+        "reqType": "SetStudioModeEnabled",
+        "reqTypeType": "requestName",
+        "reqData": "payload",
+        "reqDataType": "msg",
+        "obsInstance": "fa8533d825b63e4a",
+        "x": 540,
+        "y": 740,
+        "wires": [
+            [
+                "381b0d98668793b8"
+            ],
+            [
+                "ed9c2af3904a8dee"
+            ]
+        ]
+    },
+    {
+        "id": "6a752491284dae3b",
+        "type": "debug",
+        "z": "2244947cb7d05f1c",
+        "name": "obs catch",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 1540,
+        "wires": []
+    },
+    {
+        "id": "b088a8b956bb581e",
+        "type": "catch",
+        "z": "2244947cb7d05f1c",
+        "d": true,
+        "name": "",
+        "scope": null,
+        "uncaught": true,
+        "x": 160,
+        "y": 1540,
+        "wires": [
+            [
+                "6a752491284dae3b"
+            ]
+        ]
+    },
+    {
         "id": "fa8533d825b63e4a",
         "type": "obs-instance",
-        "name": "",
+        "name": "My obs 1",
         "host": "127.0.0.1",
         "port": "4455"
     }
