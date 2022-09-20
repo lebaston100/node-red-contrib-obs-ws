@@ -49,100 +49,6 @@
 </script>
 <!-- END Config Node -->
 
-<!-- obs event -->
-<script type="text/javascript">
-    RED.nodes.registerType("obs event", {
-        category: "obs",
-        color: "#F3B567",
-        defaults: {
-            name: {value: ""},
-            event: {value: "", required: true},
-            obsInstance: {type: "obs-instance", required: true}
-        },
-        inputs: 0,
-        outputs: 1,
-        icon: "font-awesome/fa-cogs",
-        label: function() {
-            return this.name||(this.event.split(",").length==1 && this.event)||"obs events";
-        },
-        oneditprepare: function() {
-            $("#node-input-event").typedInput({type:"event", types:[{
-                value: "event",
-                multiple: true,
-                options: websocketEventTypes.map(e => { return {value: e, text: e} })
-            }]});
-
-            // Handle docs button click
-            $("#node-input-windowBlockedText").hide();
-            $("#node-input-event").on("change", function(event, type, value) {
-                $("#node-input-obsws-docs").off("click");
-                $("#node-input-obsws-docs").on("click", function() {
-                    value.split(",").forEach(prop => {
-                        let win = window.open(`https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#${prop.toLowerCase()}`, "_blank");
-                        if (!win) $("#node-input-windowBlockedText").show();
-                    });
-                })
-            });
-        }
-    });
-
-    const websocketEventTypes = [
-        "CurrentSceneCollectionChanging", "CurrentSceneCollectionChanged", "SceneCollectionListChanged",
-        "CurrentProfileChanging", "CurrentProfileChanged", "ProfileListChanged", "SourceFilterListReindexed",
-        "SourceFilterCreated", "SourceFilterRemoved", "SourceFilterNameChanged", "SourceFilterEnableStateChanged",
-        "ExitStarted", "InputCreated", "InputRemoved", "InputNameChanged", "InputActiveStateChanged", "InputShowStateChanged",
-        "InputMuteStateChanged", "InputVolumeChanged", "InputAudioBalanceChanged", "InputAudioSyncOffsetChanged",
-        "InputAudioTracksChanged", "InputAudioMonitorTypeChanged", "InputVolumeMeters", "MediaInputPlaybackStarted",
-        "MediaInputPlaybackEnded", "MediaInputActionTriggered", "StreamStateChanged", "RecordStateChanged",
-        "ReplayBufferStateChanged", "VirtualcamStateChanged", "ReplayBufferSaved", "SceneItemCreated", "SceneItemRemoved",
-        "SceneItemListReindexed", "SceneItemEnableStateChanged", "SceneItemLockStateChanged", "SceneItemSelected",
-        "SceneItemTransformChanged", "SceneCreated", "SceneRemoved", "SceneNameChanged", "CurrentProgramSceneChanged",
-        "CurrentPreviewSceneChanged", "SceneListChanged", "CurrentSceneTransitionChanged", "CurrentSceneTransitionDurationChanged",
-        "SceneTransitionStarted", "SceneTransitionEnded", "SceneTransitionVideoEnded", "StudioModeStateChanged",
-        "VendorEvent"
-    ];
-</script>
-
-<script type="text/html" data-template-name="obs event">
-    <div class="form-row">
-        <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
-        <input type="text" id="node-input-obsInstance">
-    </div>
-    <div class="form-row">
-        <label for="node-input-event">Event</label>
-        <input type="text" id="node-input-event" style="width: calc(70.5% - 47px);"></select>
-        <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
-    </div>
-    <div class="form-tips" id="node-input-windowBlockedText">
-        <b>Attention:</b> Some documentation pages could not be opened, make sure to allow popups for this page.
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name (optional)">
-    </div>
-</script>
-
-<script type="text/html" data-help-name="obs event">
-    <p>This node outputs event messages based on the configured event type.</p>
-    <h3>Outputs</h3>
-    <ol class="node-ports">
-        <dl class="message-properties">
-            <dt>topic <span class="property-type">string</span></dt>
-            <dd>The event name</dd>
-        </dl>
-        <dl class="message-properties">
-            <dt>payload <span class="property-type">object</span></dt>
-            <dd>The event object as emitted by obs-websocket</dd>
-        </dl>
-    </ol>
-    <h3>References</h3>
-    <ul>
-        <li><a href="https://github.com/obsproject/obs-websocket/blob/4.x-current/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
-        <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
-    </ul>
-</script>
-<!-- END obs event -->
-
 <!-- obs connection status -->
 <script type="text/javascript">
     RED.nodes.registerType("obs connection status", {
@@ -188,64 +94,69 @@
 </script>
 <!-- END obs connection status -->
 
-<!-- obs request without data -->
+<!-- obs event -->
 <script type="text/javascript">
-    RED.nodes.registerType("obs request without data", {
+    RED.nodes.registerType("obs event", {
         category: "obs",
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            request: {value: "", required: true},
+            event: {value: "", required: true},
             obsInstance: {type: "obs-instance", required: true}
         },
-        inputs: 1,
+        inputs: 0,
         outputs: 1,
         icon: "font-awesome/fa-cogs",
         label: function() {
-            return this.name||this.request;
+            return this.name||(this.event.split(",").length==1 && this.event)||"obs events";
         },
         oneditprepare: function() {
-            websocketNoDataRequestTypes.forEach(function (item) {
-                $("#node-input-request").append($("<option>", {value: item, text: item}));
-            });
-            $("#node-input-request").val(this.request||websocketNoDataRequestTypes[0]);
+            $("#node-input-event").typedInput({type:"event", types:[{
+                value: "event",
+                multiple: true,
+                options: websocketEventTypes.map(e => { return {value: e, text: e} })
+            }]});
 
             // Handle docs button click
             $("#node-input-windowBlockedText").hide();
-            $("#node-input-request").on("change", function(event) {
+            $("#node-input-event").on("change", function(event, type, value) {
                 $("#node-input-obsws-docs").off("click");
                 $("#node-input-obsws-docs").on("click", function() {
-                    let win = window.open(`https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#${event.currentTarget.value.toLowerCase()}`, "_blank");
-                    if (!win) $("#node-input-windowBlockedText").show();
+                    value.split(",").forEach(prop => {
+                        let win = window.open(`https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#${prop.toLowerCase()}`, "_blank");
+                        if (!win) $("#node-input-windowBlockedText").show();
+                    });
                 })
             });
         }
     });
 
-    const websocketNoDataRequestTypes = [
-        "GetSceneCollectionList", "GetProfileList", "GetVideoSettings", "SetVideoSettings", "GetStreamServiceSettings",
-        "GetRecordDirectory", "GetVersion", "GetStats", "GetHotkeyList", "TriggerHotkeyByKeySequence", "GetInputList",
-        "GetInputKindList", "GetSpecialInputs", "GetVirtualCamStatus", "ToggleVirtualCam", "StartVirtualCam",
-        "StopVirtualCam", "GetReplayBufferStatus", "ToggleReplayBuffer", "StartReplayBuffer", "StopReplayBuffer",
-        "SaveReplayBuffer", "GetLastReplayBufferReplay", "GetOutputList", "GetRecordStatus", "ToggleRecord",
-        "StartRecord", "StopRecord", "ToggleRecordPause", "PauseRecord", "ResumeRecord", "GetSceneList", "GetGroupList",
-        "GetCurrentProgramScene", "GetCurrentPreviewScene", "GetStreamStatus", "ToggleStream", "StartStream",
-        "StopStream", "GetTransitionKindList", "GetSceneTransitionList", "GetCurrentSceneTransition", "GetCurrentSceneTransitionCursor",
-        "TriggerStudioModeTransition", "GetStudioModeEnabled", "GetMonitorList"
+    const websocketEventTypes = [
+        "CurrentSceneCollectionChanging","CurrentSceneCollectionChanged","SceneCollectionListChanged",
+        "CurrentProfileChanging","CurrentProfileChanged","ProfileListChanged","SourceFilterListReindexed",
+        "SourceFilterCreated","SourceFilterRemoved","SourceFilterNameChanged","SourceFilterEnableStateChanged",
+        "ExitStarted","InputCreated","InputRemoved","InputNameChanged","InputActiveStateChanged","InputShowStateChanged",
+        "InputMuteStateChanged","InputVolumeChanged","InputAudioBalanceChanged","InputAudioSyncOffsetChanged",
+        "InputAudioTracksChanged","InputAudioMonitorTypeChanged","InputVolumeMeters","MediaInputPlaybackStarted",
+        "MediaInputPlaybackEnded","MediaInputActionTriggered","StreamStateChanged","RecordStateChanged",
+        "ReplayBufferStateChanged","VirtualcamStateChanged","ReplayBufferSaved","SceneItemCreated","SceneItemRemoved",
+        "SceneItemListReindexed","SceneItemEnableStateChanged","SceneItemLockStateChanged","SceneItemSelected",
+        "SceneItemTransformChanged","SceneCreated","SceneRemoved","SceneNameChanged","CurrentProgramSceneChanged",
+        "CurrentPreviewSceneChanged","SceneListChanged","CurrentSceneTransitionChanged","CurrentSceneTransitionDurationChanged",
+        "SceneTransitionStarted","SceneTransitionEnded","SceneTransitionVideoEnded","StudioModeStateChanged",
+        "VendorEvent"
     ];
 </script>
 
-<script type="text/html" data-template-name="obs request without data">
+<script type="text/html" data-template-name="obs event">
     <div class="form-row">
         <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
-        <label for="node-input-request">Request</label>
-        <div style="width: 70%; display: inline-flex;">
-            <select id="node-input-request" style="flex-grow: 1;"></select>
-            <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
-        </div>
+        <label for="node-input-event">Event</label>
+        <input type="text" id="node-input-event" style="width: calc(70.5% - 47px);"></select>
+        <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
     </div>
     <div class="form-tips" id="node-input-windowBlockedText">
         <b>Attention:</b> Some documentation pages could not be opened, make sure to allow popups for this page.
@@ -256,30 +167,30 @@
     </div>
 </script>
 
-<script type="text/html" data-help-name="obs request without data">
-    <p>This node runs a obs-websocket request that does not need any custom arguments and outputs it's result.</p>
-    <h3>Inputs</h3>
-    <dl class="message-properties">
-        <dd>No message data is used for the request.</dd>
-    </dl>
+<script type="text/html" data-help-name="obs event">
+    <p>This node outputs event messages based on the configured event type.</p>
     <h3>Outputs</h3>
     <ol class="node-ports">
         <dl class="message-properties">
+            <dt>topic <span class="property-type">string</span></dt>
+            <dd>The event name</dd>
+        </dl>
+        <dl class="message-properties">
             <dt>payload <span class="property-type">object</span></dt>
-            <dd>The result object of the request as specified in the obs-websocket api docs</dd>
+            <dd>The event object as emitted by obs-websocket</dd>
         </dl>
     </ol>
     <h3>References</h3>
     <ul>
-        <li><a href="https://github.com/obsproject/obs-websocket/blob/4.x-current/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the response data</li>
+        <li><a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#events">obs-websocket API docs</a> - full description of <code>msg.payload</code></li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
-<!-- END obs request without data -->
+<!-- END obs event -->
 
-<!-- obs raw request -->
+<!-- obs request -->
 <script type="text/javascript">
-    RED.nodes.registerType("obs raw request", {
+    RED.nodes.registerType("obs request", {
         category: "obs",
         color: "#F3B567",
         defaults: {
@@ -295,7 +206,7 @@
         icon: "font-awesome/fa-cogs",
         outputLabels: ["result", "error"],
         label: function() {
-            return this.name || (this.reqTypeType == "str" && this.reqType) || "obs raw request";
+            return this.name || (["str", "requestName"].includes(this.reqTypeType) && this.reqType) || "obs request";
         },
         oneditprepare: function() {
             let noneTypeDef = {
@@ -309,7 +220,7 @@
                     label: "Request",
                     hasValue: false,
                     icon: "fa fa-list",
-                    options: websocketAllRequestTypes
+                    options: websocketAddRequestTypesFlat
             };
 
             // Initialize typedInput for requestType
@@ -334,58 +245,76 @@
                 $("#node-input-reqData").typedInput("type", "none");
             }
 
-            // Handle docs button click
             const obsWsDocsUrl = "https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md";
             $("#node-input-windowBlockedText").hide();
             $("#node-input-reqType").on("change", function(event, type, value) {
+                // Handle display of requestData TypedInput
+                if (!(["str", "requestName"].includes(type) && value in websocketAllRequestTypes && !websocketAllRequestTypes[value])) {
+                    $("#node-input-reqDataDiv").show();
+                } else {
+                    $("#node-input-reqData").typedInput("type", "none");
+                    $("#node-input-reqDataDiv").hide();
+                }
+
+                // Handle docs button click
                 $("#node-input-obsws-docs").off("click");
                 $("#node-input-obsws-docs").on("click", function() {
-                    let win = window.open(`${obsWsDocsUrl}#${["str", "requestName"].includes(type) && websocketAllRequestTypes.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
+                    let win = window.open(`${obsWsDocsUrl}#${["str", "requestName"].includes(type) && websocketAddRequestTypesFlat.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
                     if (!win) $("#node-input-windowBlockedText").show();
                 });
             });
         }
     });
 
-    const websocketAllRequestTypes = [
-            "GetPersistentData", "SetPersistentData", "GetSceneCollectionList", "SetCurrentSceneCollection",
-            "CreateSceneCollection", "GetProfileList", "SetCurrentProfile", "CreateProfile", "RemoveProfile", "GetProfileParameter",
-            "SetProfileParameter", "GetVideoSettings", "SetVideoSettings", "GetStreamServiceSettings", "SetStreamServiceSettings",
-            "GetRecordDirectory", "GetSourceFilterList", "GetSourceFilterDefaultSettings", "CreateSourceFilter",
-            "RemoveSourceFilter", "SetSourceFilterName", "GetSourceFilter", "SetSourceFilterIndex", "SetSourceFilterSettings",
-            "SetSourceFilterEnabled", "GetVersion", "GetStats", "BroadcastCustomEvent", "CallVendorRequest", "GetHotkeyList",
-            "TriggerHotkeyByName", "TriggerHotkeyByKeySequence", "Sleep", "GetInputList", "GetInputKindList", "GetSpecialInputs",
-            "CreateInput", "RemoveInput", "SetInputName", "GetInputDefaultSettings", "GetInputSettings", "SetInputSettings",
-            "GetInputMute", "SetInputMute", "ToggleInputMute", "GetInputVolume", "SetInputVolume", "GetInputAudioBalance",
-            "SetInputAudioBalance", "GetInputAudioSyncOffset", "SetInputAudioSyncOffset", "GetInputAudioMonitorType",
-            "SetInputAudioMonitorType", "GetInputAudioTracks", "SetInputAudioTracks", "GetInputPropertiesListPropertyItems",
-            "PressInputPropertiesButton", "GetMediaInputStatus", "SetMediaInputCursor", "OffsetMediaInputCursor",
-            "TriggerMediaInputAction", "GetVirtualCamStatus", "ToggleVirtualCam", "StartVirtualCam", "StopVirtualCam",
-            "GetReplayBufferStatus", "ToggleReplayBuffer", "StartReplayBuffer", "StopReplayBuffer", "SaveReplayBuffer",
-            "GetLastReplayBufferReplay", "GetOutputList", "GetOutputStatus", "ToggleOutput", "StartOutput", "StopOutput",
-            "GetOutputSettings", "SetOutputSettings", "GetRecordStatus", "ToggleRecord", "StartRecord", "StopRecord",
-            "ToggleRecordPause", "PauseRecord", "ResumeRecord", "GetSceneItemList", "GetGroupSceneItemList", "GetSceneItemId",
-            "CreateSceneItem", "RemoveSceneItem", "DuplicateSceneItem", "GetSceneItemTransform", "SetSceneItemTransform",
-            "GetSceneItemEnabled", "SetSceneItemEnabled", "GetSceneItemLocked", "SetSceneItemLocked", "GetSceneItemIndex",
-            "SetSceneItemIndex", "GetSceneItemBlendMode", "SetSceneItemBlendMode", "GetSceneList", "GetGroupList",
-            "GetCurrentProgramScene", "SetCurrentProgramScene", "GetCurrentPreviewScene", "SetCurrentPreviewScene",
-            "CreateScene", "RemoveScene", "SetSceneName", "GetSceneSceneTransitionOverride", "SetSceneSceneTransitionOverride",
-            "GetSourceActive", "GetSourceScreenshot", "SaveSourceScreenshot", "GetStreamStatus", "ToggleStream",
-            "StartStream", "StopStream", "SendStreamCaption", "GetTransitionKindList", "GetSceneTransitionList",
-            "GetCurrentSceneTransition", "SetCurrentSceneTransition", "SetCurrentSceneTransitionDuration",
-            "SetCurrentSceneTransitionSettings", "GetCurrentSceneTransitionCursor", "TriggerStudioModeTransition",
-            "SetTBarPosition", "GetStudioModeEnabled", "SetStudioModeEnabled", "OpenInputPropertiesDialog", "OpenInputFiltersDialog",
-            "OpenInputInteractDialog", "GetMonitorList", "OpenVideoMixProjector", "OpenSourceProjector"
-    ];
+    const websocketAllRequestTypes = {
+        "GetPersistentData":true,"SetPersistentData":true,"GetSceneCollectionList":false,"SetCurrentSceneCollection":true,
+        "CreateSceneCollection":true,"GetProfileList":false,"SetCurrentProfile":true,"CreateProfile":true,
+        "RemoveProfile":true,"GetProfileParameter":true,"SetProfileParameter":true,"GetVideoSettings":false,
+        "SetVideoSettings":true,"GetStreamServiceSettings":false,"SetStreamServiceSettings":true,
+        "GetRecordDirectory":false,"GetSourceFilterList":true,"GetSourceFilterDefaultSettings":true,
+        "CreateSourceFilter":true,"RemoveSourceFilter":true,"SetSourceFilterName":true,"GetSourceFilter":true,
+        "SetSourceFilterIndex":true,"SetSourceFilterSettings":true,"SetSourceFilterEnabled":true,
+        "GetVersion":false,"GetStats":false,"BroadcastCustomEvent":true,"CallVendorRequest":true,
+        "GetHotkeyList":false,"TriggerHotkeyByName":true,"TriggerHotkeyByKeySequence":true,"GetInputList":true,
+        "GetInputKindList":true,"GetSpecialInputs":false,"CreateInput":true,"RemoveInput":true,
+        "SetInputName":true,"GetInputDefaultSettings":true,"GetInputSettings":true,"SetInputSettings":true,
+        "GetInputMute":true,"SetInputMute":true,"ToggleInputMute":true,"GetInputVolume":true,"SetInputVolume":true,
+        "GetInputAudioBalance":true,"SetInputAudioBalance":true,"GetInputAudioSyncOffset":true,
+        "SetInputAudioSyncOffset":true,"GetInputAudioMonitorType":true,"SetInputAudioMonitorType":true,
+        "GetInputAudioTracks":true,"SetInputAudioTracks":true,"GetInputPropertiesListPropertyItems":true,
+        "PressInputPropertiesButton":true,"GetMediaInputStatus":true,"SetMediaInputCursor":true,
+        "OffsetMediaInputCursor":true,"TriggerMediaInputAction":true,"GetVirtualCamStatus":false,
+        "ToggleVirtualCam":false,"StartVirtualCam":false,"StopVirtualCam":false,"GetReplayBufferStatus":false,
+        "ToggleReplayBuffer":false,"StartReplayBuffer":false,"StopReplayBuffer":false,"SaveReplayBuffer":false,
+        "GetLastReplayBufferReplay":false,"GetOutputList":false,"GetOutputStatus":true,"ToggleOutput":true,
+        "StartOutput":true,"StopOutput":true,"GetOutputSettings":true,"SetOutputSettings":true,
+        "GetRecordStatus":false,"ToggleRecord":false,"StartRecord":false,"StopRecord":false,"ToggleRecordPause":false,
+        "PauseRecord":false,"ResumeRecord":false,"GetSceneItemList":true,"GetGroupSceneItemList":true,
+        "GetSceneItemId":true,"CreateSceneItem":true,"RemoveSceneItem":true,"DuplicateSceneItem":true,
+        "GetSceneItemTransform":true,"SetSceneItemTransform":true,"GetSceneItemEnabled":true,"SetSceneItemEnabled":true,
+        "GetSceneItemLocked":true,"SetSceneItemLocked":true,"GetSceneItemIndex":true,"SetSceneItemIndex":true,
+        "GetSceneItemBlendMode":true,"SetSceneItemBlendMode":true,"GetSceneList":false,"GetGroupList":false,
+        "GetCurrentProgramScene":false,"SetCurrentProgramScene":true,"GetCurrentPreviewScene":false,
+        "SetCurrentPreviewScene":true,"CreateScene":true,"RemoveScene":true,"SetSceneName":true,
+        "GetSceneSceneTransitionOverride":true,"SetSceneSceneTransitionOverride":true,"GetSourceActive":true,
+        "GetSourceScreenshot":true,"SaveSourceScreenshot":true,"GetStreamStatus":false,"ToggleStream":false,
+        "StartStream":false,"StopStream":false,"SendStreamCaption":true,"GetTransitionKindList":false,
+        "GetSceneTransitionList":false,"GetCurrentSceneTransition":false,"SetCurrentSceneTransition":true,
+        "SetCurrentSceneTransitionDuration":true,"SetCurrentSceneTransitionSettings":true,"GetCurrentSceneTransitionCursor":false,
+        "TriggerStudioModeTransition":false,"SetTBarPosition":true,"GetStudioModeEnabled":false,
+        "SetStudioModeEnabled":true,"OpenInputPropertiesDialog":true,"OpenInputFiltersDialog":true,
+        "OpenInputInteractDialog":true,"GetMonitorList":false,"OpenVideoMixProjector":true,"OpenSourceProjector":true
+    };
+    const websocketAddRequestTypesFlat = Object.keys(websocketAllRequestTypes);
 </script>
 
-<script type="text/html" data-template-name="obs raw request">
+<script type="text/html" data-template-name="obs request">
     <div class="form-row">
         <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
     <div class="form-row">
-        <label for="node-input-payload">Request Type</label>
+        <label for="node-input-reqType">Request Type</label>
         <input type="text" id="node-input-reqType" style="width:calc(70.5% - 47px)">
         <input type="hidden" id="node-input-reqTypeType">
         <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
@@ -393,8 +322,8 @@
     <div class="form-tips" id="node-input-windowBlockedText">
         <b>Attention:</b> The documentation page could not be opened, make sure to allow popups for this page.
     </div>
-    <div class="form-row">
-        <label for="node-input-payload">Request Data</label>
+    <div class="form-row" id="node-input-reqDataDiv">
+        <label for="node-input-reqData">Request Data</label>
         <input type="text" id="node-input-reqData" style="width:70%">
         <input type="hidden" id="node-input-reqDataType">
     </div>
@@ -404,7 +333,7 @@
     </div>
 </script>
 
-<script type="text/html" data-help-name="obs raw request">
+<script type="text/html" data-help-name="obs request">
     <p>This node runs any obs-websocket request and returns it's result or error.</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
@@ -436,7 +365,7 @@
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
-<!-- END obs raw request -->
+<!-- END obs request -->
 
 <!-- SetCurrentProgramScene -->
 <script type="text/javascript">

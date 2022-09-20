@@ -229,6 +229,35 @@ module.exports = function(RED) {
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+    // obs connection status node
+    function obs_connection_status(config) {
+        RED.nodes.createNode(this, config);
+        var node = this;
+        node.c = RED.nodes.getNode(config.obsInstance);
+        if (node.c) {
+            node.c.on("ConnectionOpened", function () {
+                node.status({fill:"orange", shape:"dot", text:"ConnectionOpened"});
+                node.send({payload: "ConnectionOpened"});
+            });
+            node.c.on("ConnectionClosed", function () {
+                node.status({fill:"red", shape:"dot", text: "ConnectionClosed"});
+                node.send({payload: "ConnectionClosed"});
+            });
+            node.c.on("AuthenticationFailure", function () {
+                node.status({fill:"red", shape:"dot", text: "AuthenticationFailure"});
+                node.send({payload: "AuthenticationFailure"});
+            });
+            node.c.obs.on("Identified", function () {
+                node.status({fill:"green", shape:"dot", text:"Identified"});
+                node.send({payload: "Identified"});
+            });
+        } else {
+            node.status({fill:"grey", shape:"ring ", text:"no server"});
+        }
+    }
+    RED.nodes.registerType("obs connection status", obs_connection_status);
+
+//////////////////////////////////////////////////////////////////////////////////////////////
     // obs event node
     function obs_event(config) {
         RED.nodes.createNode(this, config);
@@ -268,64 +297,21 @@ module.exports = function(RED) {
     RED.nodes.registerType("obs event", obs_event);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-    // obs connection status node
-    function obs_connection_status(config) {
-        RED.nodes.createNode(this, config);
-        var node = this;
-        node.c = RED.nodes.getNode(config.obsInstance);
-        if (node.c) {
-            node.c.on("ConnectionOpened", function () {
-                node.status({fill:"orange", shape:"dot", text:"ConnectionOpened"});
-                node.send({payload: "ConnectionOpened"});
-            });
-            node.c.on("ConnectionClosed", function () {
-                node.status({fill:"red", shape:"dot", text: "ConnectionClosed"});
-                node.send({payload: "ConnectionClosed"});
-            });
-            node.c.on("AuthenticationFailure", function () {
-                node.status({fill:"red", shape:"dot", text: "AuthenticationFailure"});
-                node.send({payload: "AuthenticationFailure"});
-            });
-            node.c.obs.on("Identified", function () {
-                node.status({fill:"green", shape:"dot", text:"Identified"});
-                node.send({payload: "Identified"});
-            });
-        } else {
-            node.status({fill:"grey", shape:"ring ", text:"no server"});
-        }
-    }
-    RED.nodes.registerType("obs connection status", obs_connection_status);
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-    // obs_request_without_data node
-    function obs_request_without_data(config) {
+    // obs_request node
+    function obs_request(config) {
         RED.nodes.createNode(this, config);
         var node = this;
         node.c = RED.nodes.getNode(config.obsInstance);
         if (node.c) {
             node.on("input", async function(msg, send, done) {
                 try {
-                    const response = await node.c.obs.call(config.request);
-                    node.send({...msg, payload: response});
-                    done();
+                    var requestType = RED.util.evaluateNodeProperty(config.reqType, config.reqTypeType, node, msg);
+                    var requestData = RED.util.evaluateNodeProperty(config.reqData, config.reqDataType, node, msg);
                 } catch(err) {
-                    done(err.error);
+                    node.send([null, {...msg, payload: err}]);
+                    done(err);
+                    return;
                 }
-            });
-        }
-    }
-    RED.nodes.registerType("obs request without data", obs_request_without_data);
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-    // obs_raw_request node
-    function obs_raw_request(config) {
-        RED.nodes.createNode(this, config);
-        var node = this;
-        node.c = RED.nodes.getNode(config.obsInstance);
-        if (node.c) {
-            node.on("input", async function(msg, send, done) {
-                let requestType = RED.util.evaluateNodeProperty(config.reqType, config.reqTypeType, node, msg);
-                let requestData = RED.util.evaluateNodeProperty(config.reqData, config.reqDataType, node, msg);
 
                 if (typeof requestType == "string" && (typeof requestData == "string" || typeof requestData == "object")) {
                     if (typeof requestData == "string") requestData = {};
@@ -343,7 +329,7 @@ module.exports = function(RED) {
             });
         }
     }
-    RED.nodes.registerType("obs raw request", obs_raw_request);
+    RED.nodes.registerType("obs request", obs_request);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     // obs_SetCurrentProgramScene node

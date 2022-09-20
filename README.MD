@@ -30,13 +30,10 @@ Only obs-websocket versions >= 5 are supported aka OBS 28 and up.
 This node shows and outputs the obs connection status.
 
 #### obs event
-This node outputs event messages based on the configured event type.
+This node outputs event messages based on the configured event type(s).
 
-#### obs request without data
-his node runs a obs-websocket request that does not need any custom arguments and outputs it's result.
-
-#### obs raw request
-This node runs any obs-websocket request and returns it's result or error.
+#### obs request
+This node runs any obs-websocket request and returns it's result(which can be nothing) or error.
 
 #### SetCurrentProgramScene
 This node switches the scene in obs.  
@@ -52,16 +49,22 @@ An example flow is provided which can be simply added by using the import -> exa
 
 ### Changelog
 
-**0.1.0:**
-- Reworked ~70% of the code. First production ready release and finally listed on npm.
+**0.1.0:** (release)
+- Reworked ~70% of the code. First production ready release and listed on npm.
 
-**0.2.0**
+**0.2.0** (dev-release)
 - Rewrote large parts again to support OBS 28 which now ships with obs-websocket 5 by default.
 
-**0.2.1**
+**0.2.1** (dev-release)
 - Improved display name of raw request node
 - Added request selection option to raw request node
 - Added multiselect to obs-event node
 - Added obs-websocket docs button to nodes where an event/request is used
+
+**0.2.2** (dev-release)
+- Further improved docs button
+- Merged "obs request without data" and "obs raw request" nodes into a single "obs request node" (This will break many flows for users that upgrade but is better to change now then later)
+- Reorganised nodes order in flow editor
+- Removed old python tools and renamed+updated generateRequests.py
 
 **This project is not affiliated with the OBS Project or obs-websocket**
