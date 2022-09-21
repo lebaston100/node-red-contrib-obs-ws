@@ -822,9 +822,9 @@
         "id": "e2e6d40d7f8edf57",
         "type": "comment",
         "z": "2244947cb7d05f1c",
-        "name": "obs raw request",
+        "name": "obs request",
         "info": "",
-        "x": 140,
+        "x": 130,
         "y": 400,
         "wires": []
     },
