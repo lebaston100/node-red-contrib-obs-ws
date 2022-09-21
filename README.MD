@@ -1,7 +1,6 @@
 # node-red-contrib-obs-ws
 
-[Node-RED](https://nodered.org) nodes for interfacing with obs via obs-websocket.  
-Provides mostly the framework for the connection with 2 requests fully implemented. Connections are managed by a shared config node which means you can control an unlimited amount™ of different obs instances.
+[Node-RED](https://nodered.org) nodes for interfacing with obs via obs-websocket.
 
 ## Install
 
