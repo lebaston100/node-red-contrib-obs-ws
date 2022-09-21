@@ -158,7 +158,7 @@
         <input type="text" id="node-input-event" style="width: calc(70.5% - 47px);"></select>
         <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
     </div>
-    <div class="form-tips" id="node-input-windowBlockedText">
+    <div class="form-tips" id="node-input-windowBlockedText" style="margin-bottom: 10px">
         <b>Attention:</b> Some documentation pages could not be opened, make sure to allow popups for this page.
     </div>
     <div class="form-row">
@@ -231,8 +231,7 @@
             });
             // Set default values if none set
             if (!this.reqType) {
-                $("#node-input-reqType").typedInput("type", "msg");
-                $("#node-input-reqType").typedInput("value", "topic");
+                $("#node-input-reqType").typedInput("type", "requestName");
             }
 
             // Initialize typedInput for requestData
@@ -248,6 +247,25 @@
             const obsWsDocsUrl = "https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md";
             $("#node-input-windowBlockedText").hide();
             $("#node-input-reqType").on("change", function(event, type, value) {
+                // Handle AutoComplete
+                if (type == "str") {
+                    $("#node-input-reqType").next(".red-ui-typedInput-container").find(".red-ui-typedInput-input").autoComplete({
+                        search: function(val) {
+                            let matches = [];
+                            websocketAddRequestTypesFlat.forEach((v, i) => {
+                                if (v.toLowerCase().includes(val.toLowerCase())) {
+                                    matches.push({
+                                        value: v,
+                                        label: v,
+                                        i: i
+                                    });
+                                }
+                            });
+                            return matches;
+                        }
+                    })
+                }
+
                 // Handle display of requestData TypedInput
                 if (!(["str", "requestName"].includes(type) && value in websocketAllRequestTypes && !websocketAllRequestTypes[value])) {
                     $("#node-input-reqDataDiv").show();
@@ -262,6 +280,10 @@
                     let win = window.open(`${obsWsDocsUrl}#${["str", "requestName"].includes(type) && websocketAddRequestTypesFlat.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
                     if (!win) $("#node-input-windowBlockedText").show();
                 });
+
+                // Handle invalid requestType message
+                $("#node-input-requestNameInvalidText").hide();
+                if (type == "str" && !websocketAddRequestTypesFlat.includes(value)) $("#node-input-requestNameInvalidText").show();
             });
         }
     });
@@ -315,16 +337,19 @@
     </div>
     <div class="form-row">
         <label for="node-input-reqType">Request Type</label>
-        <input type="text" id="node-input-reqType" style="width:calc(70.5% - 47px)">
+        <input type="text" id="node-input-reqType" style="width:calc(70.5% - 47px)" class="red-ui-autoComplete">
         <input type="hidden" id="node-input-reqTypeType">
         <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
     </div>
-    <div class="form-tips" id="node-input-windowBlockedText">
+    <div class="form-tips" id="node-input-windowBlockedText" style="margin-bottom: 10px">
         <b>Attention:</b> The documentation page could not be opened, make sure to allow popups for this page.
+    </div>
+    <div class="form-tips" id="node-input-requestNameInvalidText" style="margin-bottom: 10px">
+        <b>Attention:</b> The current Request Type is unknown and will probably not work if you try.
     </div>
     <div class="form-row" id="node-input-reqDataDiv">
         <label for="node-input-reqData">Request Data</label>
-        <input type="text" id="node-input-reqData" style="width:70%">
+        <input type="text" id="node-input-reqData" style="width:70%" class="red-ui-autoComplete">
         <input type="hidden" id="node-input-reqDataType">
     </div>
     <div class="form-row">
@@ -334,22 +359,26 @@
 </script>
 
 <script type="text/html" data-help-name="obs request">
-    <p>This node runs any obs-websocket request and returns it's result or error.</p>
+    <p>This node runs a obs-websocket request and returns it's result(which can be nothing!) or error.</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
-        <dt class="optional">topic (configurable) <span class="property-type">string</span></dt>
+        <dt class="optional">topic (optional/configurable) <span class="property-type">string</span></dt>
         <dd>The request name.</dd>
     </dl>
     <dl class="message-properties">
-        <dt class="optional">payload (configurable) <span class="property-type">object</span></dt>
+        <dt class="optional">payload (optional/configurable) <span class="property-type">object</span></dt>
         <dd>Additional "Data Fields" in json format.</dd>
     </dl>
     <h3>Outputs</h3>
     <ol class="node-ports">
         <li>result output
             <dl class="message-properties">
-                <dt>payload <span class="property-type">object</span></dt>
+                <dt>payload <span class="property-type">object or undefined</span></dt>
                 <dd>The result of the request if successful.</dd>
+            </dl>
+            <dl class="message-properties">
+                <dt>topic <span class="property-type">string</span></dt>
+                <dd>The request name.</dd>
             </dl>
         </li>
         <li>error output
@@ -374,7 +403,7 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            scene: {value: "", required: true},
+            scene: {value: "Scene 1", required: true},
             sceneType: {value: "", required: true},
             obsInstance: {type: "obs-instance", required: true}
         },
@@ -393,23 +422,27 @@
                     options: null
             };
             let sceneTypedInputObj = {
-                default: "Scene",
+                default: "str",
                 typeField: $("#node-input-sceneType"),
-                types: [scenesTypeDef, "str", "jsonata", "msg", "flow", "global"]
+                types: ["str", "jsonata", "msg", "flow", "global"]
             }
 
             // Hide/show warning messages as needed
-            $("#scs-offlinemessage").hide();
-            $("#scs-redeploymessage").hide();
-            if (!this.obsInstance) $("#scs-redeploymessage").show();
+            $("#node-input-scs-offlinemessage").hide();
+            $("#node-input-scs-redeploymessage").hide();
+            if (!this.obsInstance) $("#node-input-scs-redeploymessage").show();
 
             // http request to backend for obs scene list
             $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/scenes`, data => {
                 scenesTypeDef.options = data.scenes.reverse().map(s => s.sceneName); // Works because object reference is kept when putting inside sceneTypedInputObj
             }).fail(() => { // 503 = obs not connected
                 if (this.sceneType == "sceneName" && this.scene !== "") scenesTypeDef.options = [this.scene];
-                $("#scs-offlinemessage").show();
+                $("#node-input-scs-offlinemessage").show();
             }).always(() => {
+                if (scenesTypeDef.options) {
+                    sceneTypedInputObj.types.splice(0, 0, scenesTypeDef)
+                    sceneTypedInputObj.default = "sceneName";
+                }
                 $("#node-input-scene").typedInput(sceneTypedInputObj);
             });
         }
@@ -417,8 +450,10 @@
 </script>
 
 <script type="text/html" data-template-name="SetCurrentProgramScene">
-    <div class="form-row" style="color:red;display:none;" id="scs-offlinemessage">Not connected to obs!</div>
-    <div class="form-row" style="color:red;display:none;" id="scs-redeploymessage">
+    <div class="form-tips" id="node-input-scs-offlinemessage" style="color:red;display:none;margin-bottom: 10px">
+        Not connected to obs! Unable to fetch scenes.
+    </div>
+    <div class="form-tips" id="node-input-scs-redeploymessage" style="color:red;display:none;margin-bottom: 10px">
         To access available obs scenes, please select a valid OBS Instance, redeploy and open this again.
     </div>
     <div class="form-row">
@@ -427,7 +462,7 @@
     </div>
     <div class="form-row">
         <label for="node-input-scene">Scene Name</label>
-        <input type="text" id="node-input-scene" style="width:70%">
+        <input type="text" id="node-input-scene" style="width:70%" class="red-ui-autoComplete">
         <input type="hidden" id="node-input-sceneType">
     </div>
     <div class="form-row">
@@ -496,21 +531,22 @@
             let transitionTypedInputObj = {
                 default: "none",
                 typeField: "#node-input-transitionType",
-                types: [noneTypeDef, transitionTypeDef, "str", "msg", "flow", "global"]
+                types: [noneTypeDef, "str", "msg", "flow", "global"]
             };
 
             // Hide/show warning messages as needed
-            $("#ttp-offlinemessage").hide();
-            $("#ttp-redeploymessage").hide();
-            if (!this.obsInstance) $("#ttp-redeploymessage").show();
+            $("#node-input-tsmt-offlinemessage").hide();
+            $("#node-input-tsmt-redeploymessage").hide();
+            if (!this.obsInstance) $("#node-input-tsmt-redeploymessage").show();
 
             // http request to backend for obs transition list
             $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (data) => {
                 transitionTypeDef.options = data.transitions.map(s => s.transitionName);
             }).fail(() => { //503 = obs not connected
                 if (this.transitionType == "transition" && this.transition !== "") transitionTypeDef.options = [this.transition];
-                $("#ttp-offlinemessage").show();
+                $("#node-input-tsmt-offlinemessage").show();
             }).always(() => {
+                if (transitionTypeDef.options) transitionTypedInputObj.types.splice(1, 0, transitionTypeDef);
                 $("#node-input-transition").typedInput(transitionTypedInputObj);
             });
 
@@ -529,8 +565,10 @@
 </script>
 
 <script type="text/html" data-template-name="TriggerStudioModeTransition">
-    <div class="form-row" style="color:red;display:none;" id="ttp-offlinemessage">Not connected to obs!</div>
-    <div class="form-row" style="color:red;display:none;" id="ttp-redeploymessage">
+    <div class="form-tips" id="node-input-tsmt-offlinemessage" style="color:red;display:none;margin-bottom: 10px">
+        Not connected to obs! Unable to fetch transitions.
+    </div>
+    <div class="form-tips" id="node-input-tsmt-redeploymessage" style="color:red;display:none;margin-bottom: 10px">
         To access available obs transitions, please select a valid OBS Instance, redeploy and open this again.
     </div>
     <div class="form-row">
@@ -539,12 +577,12 @@
     </div>
     <div class="form-row">
         <label for="node-input-transition">Transition</label>
-        <input type="text" id="node-input-transition" style="width:70%">
+        <input type="text" id="node-input-transition" style="width:70%" class="red-ui-autoComplete">
         <input type="hidden" id="node-input-transitionType">
     </div>
     <div class="form-row" id="ttp-transistionTime">
         <label for="node-input-transition">Transition Time</label>
-        <input type="text" id="node-input-transitionTime" style="width:70%">
+        <input type="text" id="node-input-transitionTime" style="width:70%" class="red-ui-autoComplete">
         <input type="hidden" id="node-input-transitionTimeType">
     </div>
     <div class="form-row">
