@@ -1,6 +1,11 @@
 # node-red-contrib-obs-ws
 
-[Node-RED](https://nodered.org) nodes for interfacing with obs via obs-websocket.
+[Node-RED](https://nodered.org) nodes for interfacing with OBS via obs-websocket.
+
+## Requirements
+- OBS 28 (with websocket enabled) or OBS 27 with obs-websocket 5.0.1 plugin
+- Node-Red >= 2.0.0
+- NodeJS >= 14
 
 ## Install
 
@@ -20,8 +25,7 @@ Manual install:
 ## Use
 
 Basic node-red usage is expected as basic knowledge. All nodes are documented inside the internal node-red node help tool with a little more detail.
-For a complete documentation over the messages that can be used, look at the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md).  
-Only obs-websocket versions >= 5 are supported aka OBS 28 and up.
+For a complete documentation over the protocol look at the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md).
 
 ### Nodes
 
@@ -48,11 +52,18 @@ An example flow is provided which can be simply added by using the import -> exa
 
 ### Changelog
 
-**0.1.0:** (release)
-- Reworked ~70% of the code. First production ready release and listed on npm.
+**0.2.3** (release)
+- OBS 28 / obs-websocket 5.0.1 compatibility
+- Merged "obs request without data" and "obs raw request" nodes into a single "obs request" node (Breaking change!)
+- Autocomplete of text fields where usefull
+- Documentation button and updated internal node documentation
+- Updated example flow
 
-**0.2.0** (dev-release)
-- Rewrote large parts again to support OBS 28 which now ships with obs-websocket 5 by default.
+**0.2.2** (dev-release)
+- Further improved docs button
+- Merged "obs request without data" and "obs raw request" nodes into a single "obs request node" (This will break many flows for users that upgrade but is better to change now then later)
+- Reorganised nodes order in flow editor
+- Removed old python tools and renamed+updated generateRequests.py
 
 **0.2.1** (dev-release)
 - Improved display name of raw request node
@@ -60,10 +71,10 @@ An example flow is provided which can be simply added by using the import -> exa
 - Added multiselect to obs-event node
 - Added obs-websocket docs button to nodes where an event/request is used
 
-**0.2.2** (dev-release)
-- Further improved docs button
-- Merged "obs request without data" and "obs raw request" nodes into a single "obs request node" (This will break many flows for users that upgrade but is better to change now then later)
-- Reorganised nodes order in flow editor
-- Removed old python tools and renamed+updated generateRequests.py
+**0.2.0** (dev-release)
+- Rewrote large parts again to support OBS 28 which now ships with obs-websocket 5 by default.
+
+**0.1.0** (release)
+- Reworked ~70% of the code. First production ready release and listed on npm.
 
 **This project is not affiliated with the OBS Project or obs-websocket**
