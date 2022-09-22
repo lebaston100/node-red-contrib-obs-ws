@@ -23,7 +23,7 @@ module.exports = function(RED) {
         };
 
         // Create connection object
-        node.connectionSettings = {rpcVersion: 1}; //eventSubscriptions  just for testing, will need to add a manager for that later
+        node.connectionSettings = {rpcVersion: 1};
 
         // Create obs-websocket-js client instance and start connection
         node.trace("Creating obs-websocket-js client");
@@ -96,7 +96,6 @@ module.exports = function(RED) {
                 return; // don't even try to connect again
             }
 
-            node.trace(`node.tout: ${node.tout}`)
             if (!node.tout) {
                 node.trace("Starting Reconnector because ConnectionClosed obs event");
                 obsReconnector();
