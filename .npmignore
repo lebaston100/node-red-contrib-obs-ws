@@ -1,0 +1,16 @@
+*.7z
+*.zip
+*.log
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+icons/
+node_modules/
+tools/
+*.code-workspace
+*.vscode
+package-lock.json
