@@ -3,7 +3,7 @@
 [Node-RED](https://nodered.org) nodes for interfacing with OBS via obs-websocket.
 
 ## Requirements
-- OBS 28 (with websocket enabled) or OBS 27 with obs-websocket 5.0.1 plugin
+- OBS 28 with websocket enabled or OBS 27 with obs-websocket 5.0.1 plugin
 - Node-Red >= 2.0.0
 - NodeJS >= 14
 
@@ -25,7 +25,7 @@ Manual install:
 ## Use
 
 Basic node-red usage is expected as basic knowledge. All nodes are documented inside the internal node-red node help tool with a little more detail.
-For a complete documentation over the protocol look at the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md).
+For a complete documentation over the protocol look at the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md) or use the internal documentation button.
 
 ### Nodes
 
@@ -53,11 +53,12 @@ An example flow is provided which can be simply added by using the import -> exa
 ### Changelog
 
 **0.2.3** (release)
-- OBS 28 / obs-websocket 5.0.1 compatibility
+- OBS 28 / obs-websocket 5 compatibility
 - Merged "obs request without data" and "obs raw request" nodes into a single "obs request" node (Breaking change!)
 - Autocomplete of text fields where usefull
 - Documentation button and updated internal node documentation
 - Updated example flow
+- Partialy improved code quality
 
 **0.2.2** (dev-release)
 - Further improved docs button
