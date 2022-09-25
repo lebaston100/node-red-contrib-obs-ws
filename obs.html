@@ -40,7 +40,7 @@
         <p>This node represents a single connection to the obs websocket server.</p>
         <p><code>Host/IP</code> is the ip address or hostname of the device running obs.</p>
         <p><code>Port</code> is the configured websocket port in the obs-websocket settings. Default is 4455.</p>
-        <p><code>Password</code> is the configured passwort in the obs-websocket settings. Leave empty if disabled.</p>
+        <p><code>Password</code> is the configured passwort in the obs-websocket settings.</p>
     <h3>References</h3>
     <ul>
         <li><a href="https://github.com/obsproject/obs-websocket">obs-websocket</a> - GitHub project page</li>
@@ -367,14 +367,14 @@
     </dl>
     <dl class="message-properties">
         <dt class="optional">payload (optional/configurable) <span class="property-type">object</span></dt>
-        <dd>Additional "Data Fields" in json format.</dd>
+        <dd>Additional "Data Fields".</dd>
     </dl>
     <h3>Outputs</h3>
     <ol class="node-ports">
         <li>result output
             <dl class="message-properties">
                 <dt>payload <span class="property-type">object or undefined</span></dt>
-                <dd>The result of the request if successful.</dd>
+                <dd>The result of the request.</dd>
             </dl>
             <dl class="message-properties">
                 <dt>topic <span class="property-type">string</span></dt>
@@ -384,7 +384,7 @@
         <li>error output
             <dl class="message-properties">
                 <dt>payload <span class="property-type">string</span></dt>
-                <dd>The obs-websocket error..</dd>
+                <dd>The obs-websocket error.</dd>
             </dl>
         </li>
     </ol>
@@ -595,7 +595,6 @@
     <p>This node triggers the transition to program action which will take the current preview scene to program.</p>
     <p>By automatically sending 2 different requests before that it can optionally change the transition and set it's duration.</p>
     <p>It's the same action that happens in obs when pressing the "Transition" button in studio mode.</p>
-    <p>Use a catch node to catch request errors.</p>
     <p>To automatically fetch available transitions from obs make sure your obs is running and you deployed the node at least once after adding it.</p>
     <h3>Inputs</h3>
     <dl class="message-properties">
@@ -606,10 +605,7 @@
     </dl>
     <h3>Outputs</h3>
     <ol class="node-ports">
-        <dl class="message-properties">
-            <dt>payload <span class="property-type">object</span></dt>
-            <dd>The response of the request if successful.</dd>
-        </dl>
+        <p>The incoming msg.</p>
     </ol>
     <h3>References</h3>
     <ul>

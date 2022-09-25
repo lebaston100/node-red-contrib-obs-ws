@@ -48,9 +48,6 @@ module.exports = function(RED) {
                 registerURLHandler(node.id, "transitions", (req, res) => {
                     universalOBSRequester("GetSceneTransitionList", res);
                 });
-
-                // Tell other nodes that the obs connection was established (vs the raw websocket connection)
-                node.emit("obsConnectionOpened");
             } catch(err) {
                 // Nothing, stuffs handled elsewhere
             }
@@ -64,7 +61,7 @@ module.exports = function(RED) {
         node.on("close", async function(done) {
             node.trace("closing node, cleaning up");
             if (node.tout) clearTimeout(node.tout); // remove remaining reconnect timer if any
-            node.obs.removeAllListeners("ConnectionClosed"); // don't handle disconnect event like i would normally
+            node.obs.removeAllListeners("ConnectionClosed"); // don't handle disconnect event like normally
             setTimeout(() => ensureAllDone(done), 5);
         });
 
@@ -91,13 +88,13 @@ module.exports = function(RED) {
             node.identified = false;
 
             if (err.code && err.code == 4009) {
-                node.error("OBS Authentication failed. Please check the password you set.");
+                node.error("OBS Authentication failed. Please check the password you set and redeploy.");
                 node.emit("AuthenticationFailure");
                 return; // don't even try to connect again
             }
 
             if (!node.tout) {
-                node.trace("Starting Reconnector because ConnectionClosed obs event");
+                node.trace("Starting obsReconnector because ConnectionClosed event");
                 obsReconnector();
             }
         });
@@ -110,8 +107,8 @@ module.exports = function(RED) {
         });
 
         async function universalOBSRequester(request, res) {
+            node.requestsInFlight += 1;
             try {
-                node.requestsInFlight += 1;
                 let req = await node.obs.call(request);
                 res.json(req);
             } catch (err) {
@@ -202,9 +199,7 @@ module.exports = function(RED) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     // HTTP endpoint handler
-    RED.httpAdmin.get("/nr-contrib-obs-ws/:id/list/:request", function(req, res) {
-        expressRequestHandler(req, res);
-    });
+    RED.httpAdmin.get("/nr-contrib-obs-ws/:id/list/:request", expressRequestHandler);
 
     function expressRequestHandler(req, res) {
         let answered = false;
@@ -419,8 +414,4 @@ module.exports = function(RED) {
         }
     }
     RED.nodes.registerType("TriggerStudioModeTransition", obs_TriggerStudioModeTransition);
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-    // utils
-    // Currently no global utils
 };
