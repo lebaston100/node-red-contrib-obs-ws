@@ -52,6 +52,9 @@ An example flow is provided which can be simply added by using the import -> exa
 
 ### Changelog
 
+**0.2.4** (release)
+- Migrated TriggerStudioModeTransition to websocket batch request
+
 **0.2.3** (release)
 - OBS 28 / obs-websocket 5 compatibility
 - Merged "obs request without data" and "obs raw request" nodes into a single "obs request" node (Breaking change!)

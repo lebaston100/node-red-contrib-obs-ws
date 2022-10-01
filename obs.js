@@ -85,6 +85,7 @@ module.exports = function(RED) {
         node.obs.on("ConnectionClosed", err => {
             node.emit("ConnectionClosed");
             node.trace("ConnectionClosed obs event");
+            node.trace(err);
             node.identified = false;
 
             if (err.code && err.code == 4009) {
@@ -402,9 +403,11 @@ module.exports = function(RED) {
                 }
 
                 try {
-                    if (transitionName) await node.c.obs.call("SetCurrentSceneTransition", {"transitionName": String(transitionName)});
-                    if (transitionDuration) await node.c.obs.call("SetCurrentSceneTransitionDuration", {"transitionDuration": transitionDuration});
-                    await node.c.obs.call("TriggerStudioModeTransition");
+                    let reqs = []
+                    if (transitionName) reqs.push({requestType: "SetCurrentSceneTransition", requestData: {"transitionName": String(transitionName)}});
+                    if (transitionDuration) reqs.push({requestType: "SetCurrentSceneTransitionDuration", requestData: {"transitionDuration": transitionDuration}});
+                    reqs.push({requestType: "TriggerStudioModeTransition"});
+                    await node.c.obs.callBatch(reqs);
                     node.send({...msg});
                     done();
                 } catch(err) {
