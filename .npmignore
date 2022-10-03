@@ -11,6 +11,7 @@ Thumbs.db
 icons/
 node_modules/
 tools/
+.github/
 *.code-workspace
 *.vscode
 package-lock.json
