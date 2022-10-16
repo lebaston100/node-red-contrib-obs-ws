@@ -23,8 +23,6 @@ async def loadGithubJson() -> None:
             requestType = event["requestType"]
             requestFields = event["requestFields"]
 
-            if requestType == "Sleep": continue # Skip the Sleep request because it's invalid for this
-
             # if current line is too long create a line break
             if charsInLine > 85:
                 charsInLine = 0
