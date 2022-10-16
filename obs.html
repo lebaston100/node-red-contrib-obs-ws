@@ -114,7 +114,7 @@
             $("#node-input-event").typedInput({type:"event", types:[{
                 value: "event",
                 multiple: true,
-                options: websocketEventTypes.map(e => { return {value: e, text: e} })
+                options: websocketEventTypes.map(e => {return {value: e, text: e}})
             }]});
 
             // Handle docs button click
@@ -195,20 +195,39 @@
         color: "#F3B567",
         defaults: {
             name: {value: ""},
-            reqType: {value:"", required: true},
-            reqTypeType: {value:"", required: true},
+            obsInstance: {type: "obs-instance", required: true},
+            requests: {value: [{rt: "SetCurrentProgramScene", rtt: "requestName", rd: '{"sceneName":"Scene 1"}', rdt: "json"}]},
+            batchExecutionType: {value: "SerialRealtime"},
+            haltOnFailure: {value: false},
+            // old ones, need to keep backwards compatibility/auto-migration
+            reqType: {value:""},
+            reqTypeType: {value:""},
             reqData: {value:""},
-            reqDataType: {value:"", required: true},
-            obsInstance: {type: "obs-instance", required: true}
+            reqDataType: {value:""}
         },
         inputs: 1,
         outputs: 2,
         icon: "font-awesome/fa-cogs",
         outputLabels: ["result", "error"],
         label: function() {
-            return this.name || (["str", "requestName"].includes(this.reqTypeType) && this.reqType) || "obs request";
+            if (this.name) {
+                return this.name;
+            } else if (this.requests && this.requests.length == 1) {
+                return ["str", "requestName"].includes(this.requests[0].rtt) ? this.requests[0].rt : this.requests[0].rtt + "." + String(this.requests[0].rt);
+            } else if (this.requests && this.requests.length !== 1) {
+                return "batch request";
+            } else if (this.reqTypeType && ["str", "requestName"].includes(this.reqTypeType)) {
+                return this.reqType;
+            }
+            return "obs request";
         },
         oneditprepare: function() {
+            const obsWsDocsUrl = "https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md";
+            let windowBlockedText = $("#node-input-windowBlockedText").hide();
+            let batchOptions = $(".batchOptions").hide();
+            let noRequestsText = $("#node-input-noRequestsText");
+
+            // custom typedInput type defs
             let noneTypeDef = {
                 value: "none",
                 label: "None",
@@ -223,67 +242,146 @@
                     options: websocketAddRequestTypesFlat
             };
 
-            // Initialize typedInput for requestType
-            $("#node-input-reqType").typedInput({
-                default: "msg",
-                types: ["str", requestsTypeDef, "msg", "flow", "global"],
-                typeField: $("#node-input-reqTypeType")
+            // RequestBatchExecutionType
+            $("#node-input-batchExecutionType").typedInput({
+                types: [{
+                        value: "opt",
+                        options: [
+                            {value: "SerialRealtime", label: "SerialRealtime"},
+                            {value: "SerialFrame", label: "SerialFrame"},
+                            {value: "Parallel", label: "Parallel"},
+                        ]
+                    }
+                ]
             });
-            // Set default values if none set
-            if (!this.reqType) {
-                $("#node-input-reqType").typedInput("type", "requestName");
-            }
 
-            // Initialize typedInput for requestData
-            $("#node-input-reqData").typedInput({
-                types: [noneTypeDef, "msg", "flow", "global", "json"],
-                typeField: $("#node-input-reqDataType")
-            });
-            // Set default values if none set
-            if (!this.reqData) {
-                $("#node-input-reqData").typedInput("type", "none");
-            }
+            // Initialize editableList
+            $("#node-input-request-container").editableList({
+                sortable: true,
+                removable: true,
+                addButton: "request",
+                height: "auto",
+                addItem: function(row, index, data) {
+                    // Generate the entire entry row here including dom and events
+                    // Show batch options if truthy aka != 0
+                    index && batchOptions.show();
+                    // Always hide no request setup message since we have at least 1 entry
+                    noRequestsText.hide();
 
-            const obsWsDocsUrl = "https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md";
-            $("#node-input-windowBlockedText").hide();
-            $("#node-input-reqType").on("change", function(event, type, value) {
-                // Handle AutoComplete
-                if (type == "str") {
-                    $("#node-input-reqType").next(".red-ui-typedInput-container").find(".red-ui-typedInput-input").autoComplete({
-                        search: function(val) {
-                            let matches = [];
-                            websocketAddRequestTypesFlat.forEach((v, i) => {
-                                if (v.toLowerCase().includes(val.toLowerCase())) {
-                                    matches.push({
-                                        value: v,
-                                        label: v,
-                                        i: i
+                    // Let's create all the display elements we need
+                    let lineContainer = document.createDocumentFragment();
+                    let subRow1 = $("<div>").appendTo(lineContainer);
+                    let subRow2 = $("<div>").css({"margin-top": "8px"}).appendTo(lineContainer);
+                    $("<label>").text("Request Type").appendTo(subRow1);
+                    $("<label>").text("Request Data").appendTo(subRow2);
+                    let rtTypedInput = $("<input>", {type: "text", class: "red-ui-autoComplete", did: "node-input-reqType"}).css({width: "calc(74% - 47px)"})
+                        .appendTo(subRow1).typedInput({
+                            default: "msg",
+                            types: ["str", requestsTypeDef, "msg", "flow", "global"]
+                        });
+                    let wsDocsButton = $("<a>", {class: "red-ui-button", title: "Open obs-websocket docs"}).css({"margin-left": "10px"})
+                        .append("<i class='fa fa-book'></i>").appendTo(subRow1);
+
+                    let rdTypedInput = $("<input>", {type: "text", class: "red-ui-autoComplete", did: "node-input-reqData"}).css({width: "73%"}).appendTo(subRow2).typedInput({
+                        types: [noneTypeDef, "msg", "flow", "global", "jsonata", "json"]
+                    });
+                    let invalidRt = $("<div>", {class: "form-tips"}).css({"margin": "4px"})
+                        .append("<b>Warning:</b> The current Request Type is unknown and will probably not work if you try.")
+                        .insertAfter(subRow1);
+
+                    // Insert line container into the editableList rowwe were provided
+                    row.append(lineContainer);
+
+                    rtTypedInput.on("change", function(event, type, value) {
+                        // Handle AutoComplete
+                        if (type == "str") {
+                            rtTypedInput.next(".red-ui-typedInput-container").find(".red-ui-typedInput-input").autoComplete({
+                                search: function(val) {
+                                    let matches = [];
+                                    websocketAddRequestTypesFlat.forEach((v, i) => {
+                                        v.toLowerCase().includes(val.toLowerCase()) && matches.push({value: v, label: v, i: i});
                                     });
+                                    return matches;
                                 }
-                            });
-                            return matches;
+                            })
                         }
-                    })
-                }
 
-                // Handle display of requestData TypedInput
-                if (!(["str", "requestName"].includes(type) && value in websocketAllRequestTypes && !websocketAllRequestTypes[value])) {
-                    $("#node-input-reqDataDiv").show();
-                } else {
-                    $("#node-input-reqData").typedInput("type", "none");
-                    $("#node-input-reqDataDiv").hide();
-                }
+                        // Handle display of requestData TypedInput
+                        if (!(["str", "requestName"].includes(type) && value in websocketAllRequestTypes && !websocketAllRequestTypes[value])) {
+                            subRow2.show();
+                        } else {
+                            rdTypedInput.typedInput("type", "none");
+                            subRow2.hide();
+                        }
 
-                // Handle docs button click
-                $("#node-input-obsws-docs").off("click");
-                $("#node-input-obsws-docs").on("click", function() {
-                    let win = window.open(`${obsWsDocsUrl}#${["str", "requestName"].includes(type) && websocketAddRequestTypesFlat.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
-                    if (!win) $("#node-input-windowBlockedText").show();
+                        // Handle docs button click
+                        wsDocsButton.off("click").on("click", function() {
+                            let win = window.open(`${obsWsDocsUrl}#${["str", "requestName"].includes(type) &&
+                                websocketAddRequestTypesFlat.includes(value) ? value.toLowerCase() : "requests"}`, "_blank");
+                            win ? windowBlockedText.hide() : windowBlockedText.show();
+                        });
+
+                        // Handle invalid requestType message
+                        invalidRt.hide();
+                        if (type == "str" && !websocketAddRequestTypesFlat.includes(value)) invalidRt.show();
+
+                        // Auto correct *.* values for requestType
+                        fixUserError(rtTypedInput, type, value);
+                    });
+
+                    // Auto correct *.* values for requestData
+                    rdTypedInput.on("change", function(event, type, value) {
+                        fixUserError(rdTypedInput, type, value);
+                    });
+
+                    // Set fields to the values provided in the data object
+                    rtTypedInput.typedInput("type", data.rtt);
+                    rtTypedInput.typedInput("value", data.rt);
+                    rdTypedInput.typedInput("type", data.rdt);
+                    rdTypedInput.typedInput("value", data.rd);
+                },
+                removeItem: function(data) {
+                    // Hide batch options if only 1 entry
+                    $("#node-input-request-container").editableList("length") <= 1 && batchOptions.hide();
+                    $("#node-input-request-container").editableList("length") == 0 && noRequestsText.show();
+                }
+            });
+
+            // Migrate old config values to new format if they exist
+            if (this.reqDataType && this.reqTypeType && this.requests === undefined) {
+                this.requests = [{
+                    rt: this.reqType,
+                    rtt: this.reqTypeType,
+                    rd: this.reqData,
+                    rdt: this.reqDataType
+                }];
+                this.reqType = this.reqTypeType = this.reqData = this.reqDataType = null;
+            }
+
+            // Click action from the help text
+            $("#node-input-configureFromHelp").click(function(event) {
+                event.preventDefault();
+                $("#node-input-request-container").editableList("addItem", {rt: "topic",
+                    rtt: "msg", rd: 'payload', rdt: "msg"});
+            })
+            this.requests.length && noRequestsText.hide();
+
+            // Add all requests to editableList
+            this.requests.forEach(r => $("#node-input-request-container").editableList("addItem", r));
+        },
+        oneditsave: function() {
+            // get data from inputs and update requests array
+            let itemsDom = $("#node-input-request-container").editableList("items");
+            let config = this;
+            this.requests = []
+            itemsDom.each(function(index) {
+                let domLine = $(this);
+                config.requests.push({
+                    rt: domLine.find("[did='node-input-reqType']").typedInput("value"),
+                    rtt: domLine.find("[did='node-input-reqType']").typedInput("type"),
+                    rd: domLine.find("[did='node-input-reqData']").typedInput("value"),
+                    rdt: domLine.find("[did='node-input-reqData']").typedInput("type")
                 });
-
-                // Handle invalid requestType message
-                $("#node-input-requestNameInvalidText").hide();
-                if (type == "str" && !websocketAddRequestTypesFlat.includes(value)) $("#node-input-requestNameInvalidText").show();
             });
         }
     });
@@ -297,19 +395,19 @@
         "CreateSourceFilter":true,"RemoveSourceFilter":true,"SetSourceFilterName":true,"GetSourceFilter":true,
         "SetSourceFilterIndex":true,"SetSourceFilterSettings":true,"SetSourceFilterEnabled":true,
         "GetVersion":false,"GetStats":false,"BroadcastCustomEvent":true,"CallVendorRequest":true,
-        "GetHotkeyList":false,"TriggerHotkeyByName":true,"TriggerHotkeyByKeySequence":true,"GetInputList":true,
-        "GetInputKindList":true,"GetSpecialInputs":false,"CreateInput":true,"RemoveInput":true,
-        "SetInputName":true,"GetInputDefaultSettings":true,"GetInputSettings":true,"SetInputSettings":true,
-        "GetInputMute":true,"SetInputMute":true,"ToggleInputMute":true,"GetInputVolume":true,"SetInputVolume":true,
-        "GetInputAudioBalance":true,"SetInputAudioBalance":true,"GetInputAudioSyncOffset":true,
-        "SetInputAudioSyncOffset":true,"GetInputAudioMonitorType":true,"SetInputAudioMonitorType":true,
-        "GetInputAudioTracks":true,"SetInputAudioTracks":true,"GetInputPropertiesListPropertyItems":true,
-        "PressInputPropertiesButton":true,"GetMediaInputStatus":true,"SetMediaInputCursor":true,
-        "OffsetMediaInputCursor":true,"TriggerMediaInputAction":true,"GetVirtualCamStatus":false,
-        "ToggleVirtualCam":false,"StartVirtualCam":false,"StopVirtualCam":false,"GetReplayBufferStatus":false,
-        "ToggleReplayBuffer":false,"StartReplayBuffer":false,"StopReplayBuffer":false,"SaveReplayBuffer":false,
-        "GetLastReplayBufferReplay":false,"GetOutputList":false,"GetOutputStatus":true,"ToggleOutput":true,
-        "StartOutput":true,"StopOutput":true,"GetOutputSettings":true,"SetOutputSettings":true,
+        "GetHotkeyList":false,"TriggerHotkeyByName":true,"TriggerHotkeyByKeySequence":true,"Sleep":true,
+        "GetInputList":true,"GetInputKindList":true,"GetSpecialInputs":false,"CreateInput":true,
+        "RemoveInput":true,"SetInputName":true,"GetInputDefaultSettings":true,"GetInputSettings":true,
+        "SetInputSettings":true,"GetInputMute":true,"SetInputMute":true,"ToggleInputMute":true,
+        "GetInputVolume":true,"SetInputVolume":true,"GetInputAudioBalance":true,"SetInputAudioBalance":true,
+        "GetInputAudioSyncOffset":true,"SetInputAudioSyncOffset":true,"GetInputAudioMonitorType":true,
+        "SetInputAudioMonitorType":true,"GetInputAudioTracks":true,"SetInputAudioTracks":true,
+        "GetInputPropertiesListPropertyItems":true,"PressInputPropertiesButton":true,"GetMediaInputStatus":true,
+        "SetMediaInputCursor":true,"OffsetMediaInputCursor":true,"TriggerMediaInputAction":true,
+        "GetVirtualCamStatus":false,"ToggleVirtualCam":false,"StartVirtualCam":false,"StopVirtualCam":false,
+        "GetReplayBufferStatus":false,"ToggleReplayBuffer":false,"StartReplayBuffer":false,"StopReplayBuffer":false,
+        "SaveReplayBuffer":false,"GetLastReplayBufferReplay":false,"GetOutputList":false,"GetOutputStatus":true,
+        "ToggleOutput":true,"StartOutput":true,"StopOutput":true,"GetOutputSettings":true,"SetOutputSettings":true,
         "GetRecordStatus":false,"ToggleRecord":false,"StartRecord":false,"StopRecord":false,"ToggleRecordPause":false,
         "PauseRecord":false,"ResumeRecord":false,"GetSceneItemList":true,"GetGroupSceneItemList":true,
         "GetSceneItemId":true,"CreateSceneItem":true,"RemoveSceneItem":true,"DuplicateSceneItem":true,
@@ -328,6 +426,12 @@
         "OpenInputInteractDialog":true,"GetMonitorList":false,"OpenVideoMixProjector":true,"OpenSourceProjector":true
     };
     const websocketAddRequestTypesFlat = Object.keys(websocketAllRequestTypes);
+
+    // Find and correct user adding the msg./flow./global. into the data field
+    const propRe = /(?<=^(msg|flow|global)\.).*/;
+    function fixUserError(elem, type, value) {
+        if (["msg", "flow", "global"].includes(type) && propRe.exec(value)) elem.typedInput("value", propRe.exec(value)[0]);
+    }
 </script>
 
 <script type="text/html" data-template-name="obs request">
@@ -335,46 +439,64 @@
         <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
         <input type="text" id="node-input-obsInstance">
     </div>
-    <div class="form-row">
-        <label for="node-input-reqType">Request Type</label>
-        <input type="text" id="node-input-reqType" style="width:calc(70.5% - 47px)" class="red-ui-autoComplete">
-        <input type="hidden" id="node-input-reqTypeType">
-        <a id="node-input-obsws-docs" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
-    </div>
     <div class="form-tips" id="node-input-windowBlockedText" style="margin-bottom: 10px">
-        <b>Attention:</b> The documentation page could not be opened, make sure to allow popups for this page.
-    </div>
-    <div class="form-tips" id="node-input-requestNameInvalidText" style="margin-bottom: 10px">
-        <b>Attention:</b> The current Request Type is unknown and will probably not work if you try.
-    </div>
-    <div class="form-row" id="node-input-reqDataDiv">
-        <label for="node-input-reqData">Request Data</label>
-        <input type="text" id="node-input-reqData" style="width:70%" class="red-ui-autoComplete">
-        <input type="hidden" id="node-input-reqDataType">
+        <b>Warning:</b> The documentation page could not be opened, make sure to allow popups for this page.
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name (optional)">
     </div>
+
+    <div class="form-row batchOptions">
+        <label for="node-input-batchExecutionType"><i class="fa fa-cog"></i> Batch Execution Type</label>
+        <input type="text" id="node-input-batchExecutionType" style="width:calc(74% - 47px)">
+        <a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#requestbatchexecutiontype"
+            target="_blank" class="red-ui-button" style="margin-left: 10px;" title="Open obs-websocket docs"><i class="fa fa-book"></i></a>
+    </div>
+    <div class="form-row batchOptions">
+        <label for="node-input-haltOnFailure"><i class="fa fa-exclamation-triangle"></i> Halt on Failure</label>
+        <input type="checkbox" id="node-input-haltOnFailure" style="width: auto;">
+    </div>
+
+    <div class="form-row" style="margin-bottom:0;">
+        <label><i class="fa fa-list"></i> Request(s)</label>
+    </div>
+    <div class="form-row">
+        <ol id="node-input-request-container"></ol>
+    </div>
+
+    <div class="form-tips" id="node-input-noRequestsText">
+        <b>Attention:</b> No requests have been configured so you can send a batch request by sending an array of requests in msg.payload.<br>
+        If you want to send a single request configure the node like <a id="node-input-configureFromHelp" href>this</a>.
+    </div>
 </script>
 
 <script type="text/html" data-help-name="obs request">
     <p>This node runs a obs-websocket request and returns it's result(which can be nothing!) or error.</p>
+    <p>If more then one OR no request is defined, a batch request will be performed. Batch requests sends multiple requests at once instead of sending them one after the other.</p>
+    <p>To manually generate and send a batch request, remove all requests from the requests list and send a properly formated batch request array in msg.payload.</p>
+    <p>The error output will only output obs-websocket errors. If only a single request is defined, msg.payload will be a string with the obs-websocket error.
+        If muliple requests are defined or a manual batch request is sent, the output will be an array of
+        <a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#requestresponse-opcode-7" target="_blank">obs-websocket errors</a>.
+    </p>
+    <p>Errors that happen while parsing your configured request(s) (before sending to obs-websocket) will be printed to the debug console and can be caught with a catch node. 
+        The message will have a msg.error object with a string of the error message in msg.error.message (single requests) or a stringified array of error messages (batch requests).
+    </p>
     <h3>Inputs</h3>
     <dl class="message-properties">
         <dt class="optional">topic (optional/configurable) <span class="property-type">string</span></dt>
         <dd>The request name.</dd>
     </dl>
     <dl class="message-properties">
-        <dt class="optional">payload (optional/configurable) <span class="property-type">object</span></dt>
-        <dd>Additional "Data Fields".</dd>
+        <dt class="optional">payload (optional/configurable) <span class="property-type">any type | array</span></dt>
+        <dd>Additional request data OR a batch request array.</dd>
     </dl>
     <h3>Outputs</h3>
     <ol class="node-ports">
         <li>result output
             <dl class="message-properties">
-                <dt>payload <span class="property-type">object or undefined</span></dt>
-                <dd>The result of the request.</dd>
+                <dt>payload <span class="property-type">object | array | undefined</span></dt>
+                <dd>The result of the request. Object or undefined if it's a single request, array of results for batch requests.</dd>
             </dl>
             <dl class="message-properties">
                 <dt>topic <span class="property-type">string</span></dt>
@@ -383,14 +505,16 @@
         </li>
         <li>error output
             <dl class="message-properties">
-                <dt>payload <span class="property-type">string</span></dt>
-                <dd>The obs-websocket error.</dd>
+                <dt>payload <span class="property-type">string | array</span></dt>
+                <dd>The obs-websocket error. This port will only output obs-websocket errors. Errors that happen when parsing your configured requests will not be output here.
+                    Use a catch node to catch those errors.</dd>
             </dl>
         </li>
     </ol>
     <h3>References</h3>
     <ul>
         <li><a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#requests">obs-websocket API docs</a> for the requests and data fields</li>
+        <li><a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#requestbatch-opcode-8">obs-websocket API docs</a> for batch requests and responses</li>
         <li><a href="https://github.com/lebaston100/node-red-contrib-obs-ws">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
@@ -414,6 +538,7 @@
             return this.name||"SetCurrentProgramScene";
         },
         oneditprepare: function() {
+            let node = this;
             let scenesTypeDef = {
                     value: "sceneName",
                     label: "Scene",
@@ -427,34 +552,41 @@
                 types: ["str", "jsonata", "msg", "flow", "global"]
             }
 
-            // Hide/show warning messages as needed
-            $("#node-input-scs-offlinemessage").hide();
-            $("#node-input-scs-redeploymessage").hide();
-            if (!this.obsInstance) $("#node-input-scs-redeploymessage").show();
+            // On obs configuration node change
+            $("#node-input-obsInstance").change(function(event) {
+                // Hide/show warning messages as needed
+                $("#node-input-scs-offlinemessage").hide();
+                $("#node-input-scs-invalidObsInstanceMessage").hide();
 
-            // http request to backend for obs scene list
-            $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/scenes`, data => {
-                scenesTypeDef.options = data.scenes.reverse().map(s => s.sceneName); // Works because object reference is kept when putting inside sceneTypedInputObj
-            }).fail(() => { // 503 = obs not connected
-                if (this.sceneType == "sceneName" && this.scene !== "") scenesTypeDef.options = [this.scene];
-                $("#node-input-scs-offlinemessage").show();
-            }).always(() => {
-                if (scenesTypeDef.options) {
-                    sceneTypedInputObj.types.splice(0, 0, scenesTypeDef)
-                    sceneTypedInputObj.default = "sceneName";
+                let instance = $(this).val()
+                if (instance == "_ADD_") {
+                    $("#node-input-scs-invalidObsInstanceMessage").show();
+                    return;
                 }
-                $("#node-input-scene").typedInput(sceneTypedInputObj);
-            });
+                // http request to backend for obs scene list
+                $.getJSON(`nr-contrib-obs-ws/${instance}/list/scenes`, data => {
+                    scenesTypeDef.options = data.scenes.reverse().map(s => s.sceneName); // Works because object reference is kept when putting inside sceneTypedInputObj
+                }).fail(() => { // 503 = obs not connected
+                    if (node.sceneType == "sceneName" && node.scene !== "") scenesTypeDef.options = [node.scene];
+                    $("#node-input-scs-offlinemessage").show();
+                }).always(() => {
+                    if (scenesTypeDef.options) {
+                        sceneTypedInputObj.types.splice(0, 0, scenesTypeDef)
+                        sceneTypedInputObj.default = "sceneName";
+                    }
+                    $("#node-input-scene").typedInput(sceneTypedInputObj);
+                });
+            })
         }
     });
 </script>
 
 <script type="text/html" data-template-name="SetCurrentProgramScene">
     <div class="form-tips" id="node-input-scs-offlinemessage" style="color:red;display:none;margin-bottom: 10px">
-        Not connected to obs! Unable to fetch scenes.
+        Not connected to obs! Unable to fetch scenes. If you just created this obs-instance, you have to deploy at least once.
     </div>
-    <div class="form-tips" id="node-input-scs-redeploymessage" style="color:red;display:none;margin-bottom: 10px">
-        To access available obs scenes, please select a valid OBS Instance, redeploy and open this again.
+    <div class="form-tips" id="node-input-scs-invalidObsInstanceMessage" style="color:red;display:none;margin-bottom: 10px">
+        To access available obs scenes, please select a valid OBS Instance.
     </div>
     <div class="form-row">
         <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>
@@ -515,6 +647,7 @@
             return this.name||"TriggerStudioModeTransition";
         },
         oneditprepare: function() {
+            let node = this;
             let noneTypeDef = {
                 value: "none",
                 label: "None",
@@ -534,20 +667,28 @@
                 types: [noneTypeDef, "str", "msg", "flow", "global"]
             };
 
-            // Hide/show warning messages as needed
-            $("#node-input-tsmt-offlinemessage").hide();
-            $("#node-input-tsmt-redeploymessage").hide();
-            if (!this.obsInstance) $("#node-input-tsmt-redeploymessage").show();
+            // On obs configuration node change
+            $("#node-input-obsInstance").change(function(event) {
+                // Hide/show warning messages as needed
+                $("#node-input-tsmt-offlinemessage").hide();
+                $("#node-input-tsmt-invalidObsInstanceMessage").hide();
 
-            // http request to backend for obs transition list
-            $.getJSON(`nr-contrib-obs-ws/${this.obsInstance}/list/transitions`, (data) => {
-                transitionTypeDef.options = data.transitions.map(s => s.transitionName);
-            }).fail(() => { //503 = obs not connected
-                if (this.transitionType == "transition" && this.transition !== "") transitionTypeDef.options = [this.transition];
-                $("#node-input-tsmt-offlinemessage").show();
-            }).always(() => {
-                if (transitionTypeDef.options) transitionTypedInputObj.types.splice(1, 0, transitionTypeDef);
-                $("#node-input-transition").typedInput(transitionTypedInputObj);
+                let instance = $(this).val()
+                if (instance == "_ADD_") {
+                    $("#node-input-tsmt-invalidObsInstanceMessage").show();
+                    return;
+                }
+
+                // http request to backend for obs transition list
+                $.getJSON(`nr-contrib-obs-ws/${instance}/list/transitions`, (data) => {
+                    transitionTypeDef.options = data.transitions.map(s => s.transitionName);
+                }).fail(() => { //503 = obs not connected
+                    if (node.transitionType == "transition" && node.transition !== "") transitionTypeDef.options = [node.transition];
+                    $("#node-input-tsmt-offlinemessage").show();
+                }).always(() => {
+                    if (transitionTypeDef.options) transitionTypedInputObj.types.splice(1, 0, transitionTypeDef);
+                    $("#node-input-transition").typedInput(transitionTypedInputObj);
+                });
             });
 
             $("#node-input-transitionTime").typedInput({
@@ -566,10 +707,10 @@
 
 <script type="text/html" data-template-name="TriggerStudioModeTransition">
     <div class="form-tips" id="node-input-tsmt-offlinemessage" style="color:red;display:none;margin-bottom: 10px">
-        Not connected to obs! Unable to fetch transitions.
+        Not connected to obs! Unable to fetch scenes. If you just created this obs-instance, you have to deploy at least once.
     </div>
-    <div class="form-tips" id="node-input-tsmt-redeploymessage" style="color:red;display:none;margin-bottom: 10px">
-        To access available obs transitions, please select a valid OBS Instance, redeploy and open this again.
+    <div class="form-tips" id="node-input-tsmt-invalidObsInstanceMessage" style="color:red;display:none;margin-bottom: 10px">
+        To access available obs scenes, please select a valid OBS Instance.
     </div>
     <div class="form-row">
         <label for="node-input-obsInstance"><i class="fa fa-globe"></i> OBS Instance</label>

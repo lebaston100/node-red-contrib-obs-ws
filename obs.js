@@ -3,7 +3,7 @@
 module.exports = function(RED) {
     "use strict";
     const OBSWebSocket = require('obs-websocket-js').default;
-    const { EventSubscription } = require('obs-websocket-js');
+    const { EventSubscription, RequestBatchExecutionType } = require('obs-websocket-js');
 
     var requestHandlers = [];
 
@@ -41,13 +41,9 @@ module.exports = function(RED) {
                 // Remove all HTTP Request Handlers
                 removeAllOwnHandlers(node.id);
                 // Get scenes from obs
-                registerURLHandler(node.id, "scenes", (req, res) => {
-                    universalOBSRequester("GetSceneList", res);
-                });
+                registerURLHandler(node.id, "scenes", () => universalOBSRequester("GetSceneList"));
                 // Get transitions from obs
-                registerURLHandler(node.id, "transitions", (req, res) => {
-                    universalOBSRequester("GetSceneTransitionList", res);
-                });
+                registerURLHandler(node.id, "transitions", () => universalOBSRequester("GetSceneTransitionList"));
             } catch(err) {
                 // Nothing, stuffs handled elsewhere
             }
@@ -107,15 +103,14 @@ module.exports = function(RED) {
             await node.obs.reidentify(getEventSubs());
         });
 
-        async function universalOBSRequester(request, res) {
+        async function universalOBSRequester(request) {
             node.requestsInFlight += 1;
+            let data = null;
             try {
-                let req = await node.obs.call(request);
-                res.json(req);
-            } catch (err) {
-                res.sendStatus(503);
-            }
+                data = await node.obs.call(request);
+            } catch (err) {}
             node.requestsInFlight -= 1;
+            return data;
         }
 
         // Register new event subscriptions
@@ -200,17 +195,21 @@ module.exports = function(RED) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
     // HTTP endpoint handler
-    RED.httpAdmin.get("/nr-contrib-obs-ws/:id/list/:request", expressRequestHandler);
+    RED.httpAdmin.get("/nr-contrib-obs-ws/:id/list/:endpoint", expressRequestHandler);
 
-    function expressRequestHandler(req, res) {
-        let answered = false;
-        requestHandlers.forEach(item => {
-            if (req.params.id === item.nodeID && req.params.request === item.endpoint) {
-                answered = true;
-                item.callback(req, res);
+    async function expressRequestHandler(req, res) {
+        let node = RED.nodes.getNode(req.params.id);
+        if (node) {
+            let handler = requestHandlers.find(rh => req.params.id === rh.nodeID && req.params.endpoint === rh.endpoint)
+            if (handler) {
+                let data = await handler.callback();
+                if (data) {
+                    res.json(data);
+                    return;
+                }
             }
-        });
-        !answered && res.sendStatus(503);
+        }
+        res.sendStatus(503);
     }
 
     function registerURLHandler(nodeID, endpoint, callback) {
@@ -218,9 +217,7 @@ module.exports = function(RED) {
     }
 
     function removeAllOwnHandlers(nodeID) {
-        requestHandlers = requestHandlers.filter(value => {
-            return (value.nodeID === nodeID) ? false : true;
-        });
+        requestHandlers = [...requestHandlers.filter(v => v.nodeID !== nodeID)];
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,29 +294,107 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         var node = this;
         node.c = RED.nodes.getNode(config.obsInstance);
+        node.obsRequests = [];
+        node.batchOptions = {};
+        node.isBatch = false;
+
+        // If still on old config convert to new config
+        // Dear user, please update all your nodes! Please! I'll probably remove this in a future release
+        if (config.requests === undefined) {
+            config.requests = [{
+                rt: config.reqType,
+                rtt: config.reqTypeType,
+                rd: config.reqData,
+                rdt: config.reqDataType
+            }];
+        }
+
         if (node.c) {
             node.on("input", async function(msg, send, done) {
-                try {
-                    var requestType = RED.util.evaluateNodeProperty(config.reqType, config.reqTypeType, node, msg);
-                    var requestData = RED.util.evaluateNodeProperty(config.reqData, config.reqDataType, node, msg);
-                } catch(err) {
-                    node.send([null, {...msg, payload: err}]);
-                    done(err);
-                    return;
+                // Check and set batch options
+                node.isBatch = config.requests.length !== 1;
+                if (node.isBatch && config.batchExecutionType && "haltOnFailure" in config) {
+                    node.batchOptions.executionType = RequestBatchExecutionType[config.batchExecutionType];
+                    node.batchOptions.haltOnFailure = config.haltOnFailure;
                 }
 
-                if (typeof requestType == "string" && (typeof requestData == "string" || typeof requestData == "object")) {
-                    if (typeof requestData == "string") requestData = {};
-                    try {
-                        const response = await node.c.obs.call(requestType, requestData);
-                        node.send([{...msg, payload: response}, null]);
-                        done();
-                    } catch(err) {
-                        node.send([null, {...msg, payload: err}]);
-                        done(err);
+                node.obsRequests = [];
+                node.parserErrors = [];
+                // Check for manual batch request in payload
+                if (!config.requests.length && Array.isArray(msg.payload)) {
+                    if (msg.payload.every(r => "requestType" in r && "requestData" in r)) {
+                        node.obsRequests = msg.payload;
+                    } else {
+                        node.parserErrors.push({err: "requestType and/or requestData is missing in at least one of your array elements"});
                     }
                 } else {
-                    done(`Wrong data types in request.\nData types currently: Request Type: ${typeof requestType}; Request Data: ${typeof requestData}.\nData types Needed:  Request Type: string; Request Data: object`);
+                    config.requests.forEach(function(r, i) {
+                        var requestType;
+                        try {
+                            requestType = RED.util.evaluateNodeProperty(r.rt, r.rtt, node, msg);
+                        } catch(err) {
+                            node.parserErrors.push({position: i, err: err.toString(), stack: err.stack, requestType: r.rt, requestTypeType: r.rtt});
+                        }
+
+                        var requestData;
+                        // jsonata is special, ugh
+                        if (r.rdt == "jsonata") {
+                            try {
+                                requestData = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(r.rd, node), msg);
+                            } catch(err) {
+                                node.parserErrors.push({position: i, err: `${err.message}: token '${err.token}' @ position ${err.position}`, stack: err.stack, requestData: r.rd, requestDataType: r.rdt});
+                            }
+                        } else {
+                            try {
+                                requestData = RED.util.evaluateNodeProperty(r.rd, r.rdt, node, msg);
+                            } catch(err) {
+                                node.parserErrors.push({position: i, err: err.toString(), stack: err.stack, requestData: r.rd, requestDataType: r.rdt});
+                            }
+                        }
+
+                        if (typeof requestType == "string" &&  (typeof requestData == "string" || typeof requestData == "object")) {
+                            if (typeof requestData == "string") requestData = {};
+                            node.obsRequests.push({requestType: requestType, requestData: requestData});
+                        } else {
+                            node.parserErrors.push({position: i, err: `Wrong data types in request.\nData types currently: Request Type: '${typeof requestType}'; `
+                                + `Request Data: '${typeof requestData}'.\nData types needed:  Request Type: 'string'; Request Data: 'object'`});
+                        }
+                    });
+                }
+
+                // Send error done if there were errors
+                // Only output obs-websocket errors on the error out port, report internal (parser) errors via done(err) only
+                if (node.parserErrors.length) {
+                    done(JSON.stringify(node.parserErrors, null, 2));
+                    return; // No request to obs will be made
+                }
+
+                // Handle all the obs request stuff
+                try {
+                    let response;
+                    let responseMsgs = [null, null];
+                    if (node.isBatch) {
+                        // Make obs batch request
+                        response = await node.c.obs.callBatch(node.obsRequests, node.batchOptions);
+
+                        // If at least one request was successfull, return result
+                        if (Array.isArray(response) && response.some(ret => ret.requestStatus.result)) {
+                            responseMsgs[0] = {...msg, payload: response};
+                        }
+
+                        // Check if there were any errors and if so add them to return
+                        let err = response.filter(ret => !ret.requestStatus.result);
+                        if (err.length) responseMsgs[1] = {...msg, payload: err};
+                    } else {
+                        // Make non-batch obs request
+                        response = await node.c.obs.call(node.obsRequests[0].requestType, node.obsRequests[0].requestData);
+                        responseMsgs[0] = {...msg, payload: response};
+                    }
+                    send(responseMsgs);
+                    done();
+                } catch(err) {
+                    send([null, {...msg, payload: err}]);
+                    done();
                 }
             });
         }
@@ -356,7 +431,7 @@ module.exports = function(RED) {
                 if (sceneName) {
                     try {
                         await node.c.obs.call("SetCurrentProgramScene", {"sceneName": sceneName});
-                        node.send({...msg, payload: sceneName});
+                        send({...msg, payload: sceneName});
                         done();
                     } catch(err) {
                         done(err);
@@ -408,7 +483,7 @@ module.exports = function(RED) {
                     if (transitionDuration) reqs.push({requestType: "SetCurrentSceneTransitionDuration", requestData: {"transitionDuration": transitionDuration}});
                     reqs.push({requestType: "TriggerStudioModeTransition"});
                     await node.c.obs.callBatch(reqs);
-                    node.send({...msg});
+                    send({...msg});
                     done();
                 } catch(err) {
                     done(err);
