@@ -36,7 +36,7 @@ This node shows and outputs the obs connection status.
 This node outputs event messages based on the configured event type(s).
 
 #### obs request
-This node runs any obs-websocket request and returns it's result(which can be nothing) or error.
+This node runs any obs-websocket request and returns it's result(which can be nothing) or error. Batch requests are supported too.
 
 #### SetCurrentProgramScene
 This node switches the scene in obs.  
@@ -50,7 +50,16 @@ To automatically pull the available transition names from obs, make sure obs is 
 ### Example
 An example flow is provided which can be simply added by using the import -> examples feature. It demonstrates all the available nodes with most of their different features.
 
+### Help
+
+For help join the [Discord Server](https://discord.gg/PCYQJwX)
+
 ### Changelog
+
+**0.2.5** (release)
+- Refactored obs request node to support batch requests (node still backwards compatible to 0.2.x<5)
+- Refactored internal http api handling
+- Improved scene/transition request behaviour
 
 **0.2.4** (release)
 - Migrated TriggerStudioModeTransition to websocket batch request
