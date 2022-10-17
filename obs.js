@@ -5,13 +5,12 @@ module.exports = function(RED) {
     const OBSWebSocket = require('obs-websocket-js').default;
     const { EventSubscription, RequestBatchExecutionType } = require('obs-websocket-js');
 
-    var requestHandlers = [];
-
     // obs-websocket config node
     function ObsWebsocketClientNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
         node.trace("Starting obs config node");
+        node.requestHandlers = [];
         node.host = config.host;
         node.port = config.port;
         node.password = node.credentials.password;
@@ -39,11 +38,11 @@ module.exports = function(RED) {
                 node.trace("Connected (and authenticated) to obs");
 
                 // Remove all HTTP Request Handlers
-                removeAllOwnHandlers(node.id);
+                node.requestHandlers = [];
                 // Get scenes from obs
-                registerURLHandler(node.id, "scenes", () => universalOBSRequester("GetSceneList"));
+                registerURLHandler("scenes", () => universalOBSRequester("GetSceneList"));
                 // Get transitions from obs
-                registerURLHandler(node.id, "transitions", () => universalOBSRequester("GetSceneTransitionList"));
+                registerURLHandler("transitions", () => universalOBSRequester("GetSceneTransitionList"));
             } catch(err) {
                 // Nothing, stuffs handled elsewhere
             }
@@ -183,6 +182,10 @@ module.exports = function(RED) {
             }
             return {eventSubscriptions: subs};
         }
+
+        function registerURLHandler(endpoint, callback) {
+            node.requestHandlers.push({endpoint: endpoint, callback: callback});
+        }
     }
 
     RED.nodes.registerType("obs-instance", ObsWebsocketClientNode, {
@@ -200,7 +203,7 @@ module.exports = function(RED) {
     async function expressRequestHandler(req, res) {
         let node = RED.nodes.getNode(req.params.id);
         if (node) {
-            let handler = requestHandlers.find(rh => req.params.id === rh.nodeID && req.params.endpoint === rh.endpoint)
+            let handler = node.requestHandlers.find(rh => req.params.endpoint == rh.endpoint);
             if (handler) {
                 let data = await handler.callback();
                 if (data) {
@@ -210,14 +213,6 @@ module.exports = function(RED) {
             }
         }
         res.sendStatus(503);
-    }
-
-    function registerURLHandler(nodeID, endpoint, callback) {
-        requestHandlers.push({nodeID: nodeID, endpoint: endpoint, callback: callback});
-    }
-
-    function removeAllOwnHandlers(nodeID) {
-        requestHandlers = [...requestHandlers.filter(v => v.nodeID !== nodeID)];
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -391,11 +386,10 @@ module.exports = function(RED) {
                         responseMsgs[0] = {...msg, payload: response};
                     }
                     send(responseMsgs);
-                    done();
                 } catch(err) {
                     send([null, {...msg, payload: err}]);
-                    done();
                 }
+                done();
             });
         }
     }
