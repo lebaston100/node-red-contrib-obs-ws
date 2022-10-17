@@ -474,6 +474,7 @@
 <script type="text/html" data-help-name="obs request">
     <p>This node runs a obs-websocket request and returns it's result(which can be nothing!) or error.</p>
     <p>If more then one OR no request is defined, a batch request will be performed. Batch requests sends multiple requests at once instead of sending them one after the other.</p>
+    <p>If running a batch request, the result output will only output a message if at least one of the requests was successful</p>
     <p>To manually generate and send a batch request, remove all requests from the requests list and send a properly formated batch request array in msg.payload.</p>
     <p>The error output will only output obs-websocket errors. If only a single request is defined, msg.payload will be a string with the obs-websocket error.
         If muliple requests are defined or a manual batch request is sent, the output will be an array of
@@ -551,6 +552,7 @@
                 typeField: $("#node-input-sceneType"),
                 types: ["str", "jsonata", "msg", "flow", "global"]
             }
+            let sceneTypedInput = $("#node-input-scene");
 
             // On obs configuration node change
             $("#node-input-obsInstance").change(function(event) {
@@ -566,6 +568,8 @@
                 // http request to backend for obs scene list
                 $.getJSON(`nr-contrib-obs-ws/${instance}/list/scenes`, data => {
                     scenesTypeDef.options = data.scenes.reverse().map(s => s.sceneName); // Works because object reference is kept when putting inside sceneTypedInputObj
+
+                    // Handle AutoComplete
                 }).fail(() => { // 503 = obs not connected
                     if (node.sceneType == "sceneName" && node.scene !== "") scenesTypeDef.options = [node.scene];
                     $("#node-input-scs-offlinemessage").show();
@@ -574,9 +578,23 @@
                         sceneTypedInputObj.types.splice(0, 0, scenesTypeDef)
                         sceneTypedInputObj.default = "sceneName";
                     }
-                    $("#node-input-scene").typedInput(sceneTypedInputObj);
+                    sceneTypedInput.typedInput(sceneTypedInputObj);
                 });
-            })
+            });
+
+            sceneTypedInput.on("change", function(event, type, value) {
+                if (type == "str") {
+                    sceneTypedInput.next(".red-ui-typedInput-container").find(".red-ui-typedInput-input").autoComplete({
+                        search: function(val) {
+                            let matches = [];
+                            scenesTypeDef.options.forEach((v, i) => {
+                                v.toLowerCase().includes(val.toLowerCase()) && matches.push({value: v, label: v, i: i});
+                            });
+                            return matches;
+                        }
+                    })
+                }
+            });
         }
     });
 </script>
@@ -666,6 +684,7 @@
                 typeField: "#node-input-transitionType",
                 types: [noneTypeDef, "str", "msg", "flow", "global"]
             };
+            let transitionTypedInput = $("#node-input-transition");
 
             // On obs configuration node change
             $("#node-input-obsInstance").change(function(event) {
@@ -687,8 +706,22 @@
                     $("#node-input-tsmt-offlinemessage").show();
                 }).always(() => {
                     if (transitionTypeDef.options) transitionTypedInputObj.types.splice(1, 0, transitionTypeDef);
-                    $("#node-input-transition").typedInput(transitionTypedInputObj);
+                    transitionTypedInput.typedInput(transitionTypedInputObj);
                 });
+            });
+
+            transitionTypedInput.on("change", function(event, type, value) {
+                if (type == "str") {
+                    transitionTypedInput.next(".red-ui-typedInput-container").find(".red-ui-typedInput-input").autoComplete({
+                        search: function(val) {
+                            let matches = [];
+                            transitionTypeDef.options.forEach((v, i) => {
+                                v.toLowerCase().includes(val.toLowerCase()) && matches.push({value: v, label: v, i: i});
+                            });
+                            return matches;
+                        }
+                    })
+                }
             });
 
             $("#node-input-transitionTime").typedInput({
