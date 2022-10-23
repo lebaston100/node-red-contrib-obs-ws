@@ -282,14 +282,13 @@
                     let wsDocsButton = $("<a>", {class: "red-ui-button", title: "Open obs-websocket docs"}).css({"margin-left": "10px"})
                         .append("<i class='fa fa-book'></i>").appendTo(subRow1);
 
-                    let rdTypedInput = $("<input>", {type: "text", class: "red-ui-autoComplete", did: "node-input-reqData"}).css({width: "73%"}).appendTo(subRow2).typedInput({
-                        types: [noneTypeDef, "msg", "flow", "global", "jsonata", "json"]
-                    });
+                    let rdTypedInput = $("<input>", {type: "text", class: "red-ui-autoComplete", did: "node-input-reqData"}).css({width: "73%"})
+                        .appendTo(subRow2).typedInput({types: [noneTypeDef, "msg", "flow", "global", "jsonata", "json"]});
                     let invalidRt = $("<div>", {class: "form-tips"}).css({"margin": "4px"})
                         .append("<b>Warning:</b> The current Request Type is unknown and will probably not work if you try.")
                         .insertAfter(subRow1);
 
-                    // Insert line container into the editableList rowwe were provided
+                    // Insert line container into the editableList row we were provided
                     row.append(lineContainer);
 
                     rtTypedInput.on("change", function(event, type, value) {

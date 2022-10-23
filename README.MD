@@ -56,11 +56,14 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**0.2.7** (release)
+- See changelog entry below
+
 **0.2.5/.6** (dev-release)
 - Refactored obs request node to support batch requests (node still backwards compatible to 0.2.x<5)
 - Refactored internal http api handling
 - Improved scene/transition request behaviour
-- Added autocomplete to SetCurrentProgramScene and TriggerStudioModeTransition ndoes
+- Added autocomplete to SetCurrentProgramScene and TriggerStudioModeTransition nodes
 
 **0.2.4** (release)
 - Migrated TriggerStudioModeTransition to websocket batch request

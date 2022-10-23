@@ -170,8 +170,6 @@ module.exports = function(RED) {
                 }
                 node.requestsInFlight -= 1;
             }
-
-            node.trace(JSON.stringify(node.eventSubs));
         }
 
         // Internal function to resolve my event sub object to something obs-websocket can understand
