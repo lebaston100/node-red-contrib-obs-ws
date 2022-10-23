@@ -1378,7 +1378,7 @@
             {
                 "rt": "Sleep",
                 "rtt": "requestName",
-                "rd": "{\"sleepMillis\": $ab(sleepTime)}",
+                "rd": "{\"sleepMillis\": $abs(sleepTime)}",
                 "rdt": "jsonata"
             },
             {
