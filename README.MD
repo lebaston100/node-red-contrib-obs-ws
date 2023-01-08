@@ -56,6 +56,9 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**0.2.8** (release)
+- Update Events List
+
 **0.2.7** (release)
 - See changelog entry below
 
