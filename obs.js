@@ -15,6 +15,8 @@ module.exports = function(RED) {
         node.port = config.port;
         node.password = node.credentials.password;
         node.tout = null;
+        node.pingSender = null;
+        node.lastPong = 0;
         node.identified = false;
         node.requestsInFlight = 0;
         node.eventSubs = {
@@ -56,6 +58,7 @@ module.exports = function(RED) {
         node.on("close", async function(done) {
             node.trace("closing node, cleaning up");
             if (node.tout) clearTimeout(node.tout); // remove remaining reconnect timer if any
+            if (node.pingSender) clearInterval(node.pingSender);
             node.obs.removeAllListeners("ConnectionClosed"); // don't handle disconnect event like normally
             setTimeout(() => ensureAllDone(done), 5);
         });
@@ -82,6 +85,7 @@ module.exports = function(RED) {
             node.trace("ConnectionClosed obs event");
             node.trace(err);
             node.identified = false;
+            if (node.pingSender) clearInterval(node.pingSender);
 
             if (err.code && err.code == 4009) {
                 node.error("OBS Authentication failed. Please check the password you set and redeploy.");
@@ -95,11 +99,24 @@ module.exports = function(RED) {
             }
         });
 
+        // Use the raw websocket pong event to keep a healthcheck going
+        node.obs.socket.on("pong", () => {
+            node.trace("Recv websocket pong frame");
+            node.lastPong = Date.now();
+        });
+
         node.obs.on("Identified", async () => {
             node.trace("Identified obs event");
             // We need this for EventSubscription handling
             node.identified = true;
             await node.obs.reidentify(getEventSubs());
+
+            node.lastPong = Date.now();
+            node.pingSender = setInterval(() => {
+                node.trace("Sending ping frame");
+                node.obs.socket.ping();
+                if (Date.now() - node.lastPong > 21000) node.obs.disconnect();
+            }, 10000);
         });
 
         async function universalOBSRequester(request) {
