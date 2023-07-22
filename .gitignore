@@ -12,4 +12,3 @@ icons/
 node_modules/
 *.code-workspace
 *.vscode
-package-lock.json
