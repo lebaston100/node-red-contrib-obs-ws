@@ -56,6 +56,9 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**0.2.10** (hotfix-release)
+- Fix node constantly reconnecting after an initial reconnect
+
 **0.2.9** (release)
 - Added websocket ping to detect (and attempt to reconnect) dead connections. Pings every 10 sec, times out after 21 sec.
 - Bumped obs-websocket-js to 5.0.3

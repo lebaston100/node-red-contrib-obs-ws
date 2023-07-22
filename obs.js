@@ -99,24 +99,23 @@ module.exports = function(RED) {
             }
         });
 
-        // Use the raw websocket pong event to keep a healthcheck going
-        node.obs.socket.on("pong", () => {
-            node.trace("Recv websocket pong frame");
-            node.lastPong = Date.now();
-        });
-
         node.obs.on("Identified", async () => {
             node.trace("Identified obs event");
             // We need this for EventSubscription handling
             node.identified = true;
             await node.obs.reidentify(getEventSubs());
 
+            // send PING frames on the regular and disconnect if no PONG frames received
             node.lastPong = Date.now();
             node.pingSender = setInterval(() => {
                 node.trace("Sending ping frame");
                 node.obs.socket.ping();
                 if (Date.now() - node.lastPong > 21000) node.obs.disconnect();
             }, 10000);
+            node.obs.socket.on("pong", () => {
+                node.trace("Recv websocket pong frame");
+                node.lastPong = Date.now();
+            });
         });
 
         async function universalOBSRequester(request) {
