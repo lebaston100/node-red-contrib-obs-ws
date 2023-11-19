@@ -230,6 +230,17 @@ module.exports = function(RED) {
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+    // Helper function to make evaluateJSONataExpression awaitable for node-red >= 4.x
+    const asyncEvaluateJSONataExpression = (expression, msg) => {
+        return new Promise((resolve, reject) => {
+            RED.util.evaluateJSONataExpression(expression, msg, (err, data) => {
+                if (err) return reject(err);
+                resolve(data);
+            });
+        })
+      }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
     // obs connection status node
     function obs_connection_status(config) {
         RED.nodes.createNode(this, config);
@@ -337,7 +348,7 @@ module.exports = function(RED) {
                         node.parserErrors.push({err: "requestType and/or requestData is missing in at least one of your array elements"});
                     }
                 } else {
-                    config.requests.forEach(function(r, i) {
+                    config.requests.forEach(async function(r, i) {
                         var requestType;
                         try {
                             requestType = RED.util.evaluateNodeProperty(r.rt, r.rtt, node, msg);
@@ -349,7 +360,7 @@ module.exports = function(RED) {
                         // jsonata is special, ugh
                         if (r.rdt == "jsonata") {
                             try {
-                                requestData = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(r.rd, node), msg);
+                                requestData = await asyncEvaluateJSONataExpression(RED.util.prepareJSONataExpression(r.rd, node), msg);
                             } catch(err) {
                                 node.parserErrors.push({position: i, err: `${err.message}: token '${err.token}' @ position ${err.position}`, stack: err.stack, requestData: r.rd, requestDataType: r.rdt});
                             }
@@ -424,7 +435,7 @@ module.exports = function(RED) {
                     sceneName = RED.util.evaluateNodeProperty(config.scene, config.sceneType, node, msg)
                 } else if (config.sceneType === "jsonata") {
                     try { // Handle this more cleanly then the others for better UX
-                        sceneName = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(config.scene, node), msg);
+                        sceneName = await asyncEvaluateJSONataExpression(RED.util.prepareJSONataExpression(config.scene, node), msg);
                     } catch (e) {
                         done(`Invalid JSONata expression: ${e.message}`);
                         return;
@@ -476,7 +487,7 @@ module.exports = function(RED) {
                         transitionDuration = Math.abs(parseInt(config.transitionTime));
                     } else if (config.transitionTimeType === "jsonata") {
                         try { // Handle this more cleanly then the others for better UX
-                            transitionDuration = RED.util.evaluateJSONataExpression(RED.util.prepareJSONataExpression(config.transitionTime, node), msg);
+                            transitionDuration = await asyncEvaluateJSONataExpression(RED.util.prepareJSONataExpression(config.transitionTime, node), msg);
                         } catch (e) {
                             done(`Invalid JSONata expression: ${e.message}`);
                             return;

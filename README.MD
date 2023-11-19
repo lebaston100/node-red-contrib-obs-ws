@@ -56,6 +56,9 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**0.2.11** (release)
+- Update jsonata handling to prepare for node-red v4.x and remove log spam by deprecation warning
+
 **0.2.10** (hotfix-release)
 - Fix node constantly reconnecting after an initial reconnect
 
