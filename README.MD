@@ -3,7 +3,7 @@
 [Node-RED](https://nodered.org) nodes for interfacing with OBS via obs-websocket.
 
 ## Requirements
-- OBS 28 with websocket enabled or OBS 27 with obs-websocket 5.0.1 plugin
+- OBS >= 28 with websocket enabled
 - Node-Red >= 2.0.0
 - NodeJS >= 14
 
@@ -55,6 +55,10 @@ An example flow is provided which can be simply added by using the import -> exa
 For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
+
+**0.2.12** (release)
+- Added new requests/events for obs-websocket 5.4.0
+- Bumped obs-websocket-js to 5.0.4
 
 **0.2.11** (release)
 - Update jsonata handling to prepare for node-red v4.x and remove log spam by deprecation warning
