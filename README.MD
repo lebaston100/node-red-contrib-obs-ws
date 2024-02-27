@@ -56,6 +56,9 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**0.2.13** (release)
+- Bumped obs-websocket-js to 5.0.5
+
 **0.2.12** (release)
 - Added new requests/events for obs-websocket 5.4.0
 - Bumped obs-websocket-js to 5.0.4
