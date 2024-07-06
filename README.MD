@@ -25,7 +25,7 @@ Manual install:
 ## Use
 
 Basic node-red usage is expected as basic knowledge. All nodes are documented inside the internal node-red node help tool with a little more detail.
-For a complete documentation over the protocol look at the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md) or use the internal documentation button.
+For a complete documentation over the protocol itself look at the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md) or use the internal documentation button.
 
 ### Nodes
 
@@ -55,6 +55,11 @@ An example flow is provided which can be simply added by using the import -> exa
 For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
+
+**1.1.0** (release)
+- Update request types/events. (SplitRecordFile, CreateRecordChapter, RecordFileChanged)
+- Fix jsonata in obs-request
+- Improve json string handling in obs-request
 
 **1.0.0** (release)
 - Version bump only. It's been out and stable for long enough now.

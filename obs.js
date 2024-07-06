@@ -348,7 +348,7 @@ module.exports = function(RED) {
                         node.parserErrors.push({err: "requestType and/or requestData is missing in at least one of your array elements"});
                     }
                 } else {
-                    config.requests.forEach(async function(r, i) {
+                    for (const [i, r] of config.requests.entries()) {
                         var requestType;
                         try {
                             requestType = RED.util.evaluateNodeProperty(r.rt, r.rtt, node, msg);
@@ -371,15 +371,22 @@ module.exports = function(RED) {
                                 node.parserErrors.push({position: i, err: err.toString(), stack: err.stack, requestData: r.rd, requestDataType: r.rdt});
                             }
                         }
-
                         if (typeof requestType == "string" &&  (typeof requestData == "string" || typeof requestData == "object")) {
-                            if (typeof requestData == "string") requestData = {};
+                            if (typeof requestData == "string") {
+                                try {
+                                    // Try to parse request data string as json object
+                                    // This way even string and jsonata input of json is possible
+                                    requestData = JSON.parse(requestData);
+                                } catch(err) {
+                                    requestData = {};
+                                }
+                            }
                             node.obsRequests.push({requestType: requestType, requestData: requestData});
                         } else {
                             node.parserErrors.push({position: i, err: `Wrong data types in request.\nData types currently: Request Type: '${typeof requestType}'; `
                                 + `Request Data: '${typeof requestData}'.\nData types needed:  Request Type: 'string'; Request Data: 'object'`});
                         }
-                    });
+                    };
                 }
 
                 // Send error done if there were errors
