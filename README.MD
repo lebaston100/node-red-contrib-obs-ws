@@ -56,6 +56,10 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**1.2.0** (release)
+- Update obs-websocket-js
+    - This change now requires at least Node 18
+
 **1.1.0** (release)
 - Update request types/events. (SplitRecordFile, CreateRecordChapter, RecordFileChanged)
 - Fix jsonata in obs-request
