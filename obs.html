@@ -482,6 +482,7 @@
         If muliple requests are defined or a manual batch request is sent, the output will be an array of
         <a href="https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md#requestresponse-opcode-7" target="_blank">obs-websocket errors</a>.
     </p>
+    <p>Sending a request while the websocket connection is not at least "Identified" will result in an error.</p>
     <p>Errors that happen while parsing your configured request(s) (before sending to obs-websocket) will be printed to the debug console and can be caught with a catch node. 
         The message will have a msg.error object with a string of the error message in msg.error.message (single requests) or a stringified array of error messages (batch requests).
     </p>

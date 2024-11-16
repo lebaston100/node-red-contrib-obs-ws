@@ -5,7 +5,7 @@
 ## Requirements
 - OBS >= 28 with websocket enabled
 - Node-Red >= 2.0.0
-- NodeJS >= 14
+- NodeJS >= 18
 
 ## Install
 
@@ -30,7 +30,7 @@ For a complete documentation over the protocol itself look at the [obs-websocket
 ### Nodes
 
 #### obs connection status
-This node shows and outputs the obs connection status.
+This node shows and outputs the OBS connection status.
 
 #### obs event
 This node outputs event messages based on the configured event type(s).
@@ -39,16 +39,33 @@ This node outputs event messages based on the configured event type(s).
 This node runs any obs-websocket request and returns it's result(which can be nothing) or error. Batch requests are supported too.
 
 #### SetCurrentProgramScene
-This node switches the scene in obs.  
-To automatically fetch available scenes from obs, make sure your obs is running and you deployed the node at least once after adding it.
+This node switches the scene in OBS.
+To automatically fetch available scenes from OBS, make sure your OBS is running and you deployed the node at least once after adding it.
 
 #### TriggerStudioModeTransition
 This node triggers the transition to program action which will take the current preview scene to program.
 By automatically sending 2 different requests before that it can optionally change the transition and set it's duration.
-To automatically pull the available transition names from obs, make sure obs is connected and you deployed the node at least once after adding it.
+To automatically pull the available transition names from OBS, make sure OBS is connected and you deployed the node at least once after adding it.
 
 ### Example
 An example flow is provided which can be simply added by using the import -> examples feature. It demonstrates all the available nodes with most of their different features.
+
+### Troubleshooting and common errors
+
+Some finer grained debug messages that might be helpful for troubleshooting are sent to the node-red trace log level.
+To show those messages in the console/stdout change the logging.console.level inside node-red's "settings.js" to "trace" (Default will be "info").
+
+If there is no connection to OBS:
+- Check "Enable WebSocket server" is checked in OBS's WebSocket Server Settings window.
+- If node-red is not running on the same machine as OBS: Check your firewall settings on both sides. Disable it for testing and try to connect again. If that works create a firewall exception.
+- Check the ip/hostname and port are set correctly in the configuration node. There might be some edge cases where the ip shown inside the WebSocket Server Settings window is not the ip you need to use. Leave the default "127.0.0.1" when running on the same machine.
+- Check the password is correctly set if Authentication is enabled. You will get a "OBS Authentication failed. Please check the password you set and redeploy." error in the node-red debug console, stdout and the obs-connection node will output a "AuthenticationFailure" message.
+
+If requests fail:
+- Load the example flow and check that any of the generic request examples work and make note of how the nodes are configured.
+- Check the request name matches exactly with those from the [obs-websocket protocol documentation](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md).
+- Check if you're not sending and of the required additional parameters and they are of the required data types.
+- Enable "Enable Debug Logging" in the OBS WebSocket Server Settings and check the OBS log for additional details.
 
 ### Help
 
@@ -56,14 +73,19 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**1.2.1** (release)
+- Added Troubleshooting section to the readme
+- Catch and replace "Socket not identified" error message with "Error: Not connected." in obs request node
+- Send request errors to node-red trace log channel
+
 **1.2.0** (release)
-- Update obs-websocket-js
+- Update obs-websocket-js to 5.0.6
     - This change now requires at least Node 18
 
 **1.1.0** (release)
 - Update request types/events. (SplitRecordFile, CreateRecordChapter, RecordFileChanged)
-- Fix jsonata in obs-request
-- Improve json string handling in obs-request
+- Fix jsonata in obs request
+- Improve json string handling in obs request
 
 **1.0.0** (release)
 - Version bump only. It's been out and stable for long enough now.
@@ -117,7 +139,7 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 **0.2.1** (dev-release)
 - Improved display name of raw request node
 - Added request selection option to raw request node
-- Added multiselect to obs-event node
+- Added multiselect to obs event node
 - Added obs-websocket docs button to nodes where an event/request is used
 
 **0.2.0** (dev-release)

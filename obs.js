@@ -82,7 +82,7 @@ module.exports = function(RED) {
 
         node.obs.on("ConnectionClosed", err => {
             node.emit("ConnectionClosed");
-            node.trace("ConnectionClosed obs event");
+            node.trace("ConnectionClosed obs event. Reported error:");
             node.trace(err);
             node.identified = false;
             if (node.pingSender) clearInterval(node.pingSender);
@@ -419,6 +419,10 @@ module.exports = function(RED) {
                     }
                     send(responseMsgs);
                 } catch(err) {
+                    if (err?.message && err.message === "Socket not identified") {
+                        err = "Error: Not connected."
+                    }
+                    node.trace(err);
                     send([null, {...msg, payload: err}]);
                 }
                 done();
@@ -460,6 +464,7 @@ module.exports = function(RED) {
                         send({...msg, payload: sceneName});
                         done();
                     } catch(err) {
+                        node.trace(err);
                         done(err);
                     }
                 }
@@ -512,6 +517,7 @@ module.exports = function(RED) {
                     send({...msg});
                     done();
                 } catch(err) {
+                    node.trace(err);
                     done(err);
                 }
             });
