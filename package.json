@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-obs-ws",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Connect to OBS Studio and control it/receive events. Node-Red bindings for obs-websocket-js.",
   "main": "obs.js",
   "scripts": {
@@ -27,6 +27,6 @@
     "url": "https://github.com/lebaston100/node-red-contrib-obs-ws.git"
   },
   "engines": {
-    "node": ">=16.0"
+    "node": ">16.0"
   }
 }

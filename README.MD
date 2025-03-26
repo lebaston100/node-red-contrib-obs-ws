@@ -73,6 +73,9 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**1.2.2** (release)
+- Update lists of requests and events
+
 **1.2.1** (release)
 - Added Troubleshooting section to the readme
 - Catch and replace "Socket not identified" error message with "Error: Not connected." in obs request node
