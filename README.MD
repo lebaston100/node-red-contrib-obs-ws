@@ -73,6 +73,10 @@ For help join the [Discord Server](https://discord.gg/PCYQJwX)
 
 ### Changelog
 
+**1.2.3** (release)
+- Update lists of requests and events
+- Added ability to SetCurrentProgramScene node to dynamically target a different obs instance then initially configured by referencing the config node id (can be found at the bottom of the config node settings) in msg.obs as a string. This might later be extended to the other nodes.
+
 **1.2.2** (release)
 - Update lists of requests and events
 

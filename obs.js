@@ -436,40 +436,43 @@ module.exports = function(RED) {
     function obs_SetCurrentProgramScene(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-        node.c = RED.nodes.getNode(config.obsInstance);
-        if (node.c) {
-            node.on("input", async function(msg, send, done) {
-                let sceneName = null;
 
-                // Parse scene name
-                if (["msg", "flow", "global", "str", "sceneName"].includes(config.sceneType)) {
-                    sceneName = RED.util.evaluateNodeProperty(config.scene, config.sceneType, node, msg)
-                } else if (config.sceneType === "jsonata") {
-                    try { // Handle this more cleanly then the others for better UX
-                        sceneName = await asyncEvaluateJSONataExpression(RED.util.prepareJSONataExpression(config.scene, node), msg);
-                    } catch (e) {
-                        done(`Invalid JSONata expression: ${e.message}`);
-                        return;
-                    }
-                }
+        node.on("input", async function(msg, send, done) {
+            node.c = RED.nodes.getNode((typeof(msg?.obs) == "string" && msg?.obs) || config.obsInstance);
+            if (!node.c) {
+                done("OBS server configuration not found");
+                return;
+            }
+            let sceneName = null;
 
-                if (typeof sceneName !== "string") {
-                    done(`Scene name data type is invalid. Want: string; Has: ${typeof sceneName}`);
+            // Parse scene name
+            if (["msg", "flow", "global", "str", "sceneName"].includes(config.sceneType)) {
+                sceneName = RED.util.evaluateNodeProperty(config.scene, config.sceneType, node, msg)
+            } else if (config.sceneType === "jsonata") {
+                try { // Handle this more cleanly then the others for better UX
+                    sceneName = await asyncEvaluateJSONataExpression(RED.util.prepareJSONataExpression(config.scene, node), msg);
+                } catch (e) {
+                    done(`Invalid JSONata expression: ${e.message}`);
                     return;
                 }
+            }
 
-                if (sceneName) {
-                    try {
-                        await node.c.obs.call("SetCurrentProgramScene", {"sceneName": sceneName});
-                        send({...msg, payload: sceneName});
-                        done();
-                    } catch(err) {
-                        node.trace(err);
-                        done(err);
-                    }
+            if (typeof sceneName !== "string") {
+                done(`Scene name data type is invalid. Want: string; Has: ${typeof sceneName}`);
+                return;
+            }
+
+            if (sceneName) {
+                try {
+                    await node.c.obs.call("SetCurrentProgramScene", {"sceneName": sceneName});
+                    send({...msg, payload: sceneName});
+                    done();
+                } catch(err) {
+                    node.trace(err);
+                    done(err);
                 }
-            });
-        }
+            }
+        });
     }
     RED.nodes.registerType("SetCurrentProgramScene", obs_SetCurrentProgramScene);
 

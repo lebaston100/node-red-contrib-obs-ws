@@ -12,6 +12,9 @@
         },
         label: function() {
             return this.name||`ws://${this.host}:${this.port}`;
+        },
+        oneditprepare: function() {
+            $("#configurationNodeId").text(this.id);
         }
     });
 </script>
@@ -32,6 +35,9 @@
     <div class="form-row">
         <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-config-input-name" placeholder="Name (optional)">
+    </div>
+    <div class="form-row">
+        Configuration Node ID: <span id="configurationNodeId"></span>
     </div>
 </script>
 
@@ -132,11 +138,11 @@
     });
 
     const websocketEventTypes = [
-        "CurrentSceneCollectionChanging","CurrentSceneCollectionChanged","SceneCollectionListChanged",
-        "CurrentProfileChanging","CurrentProfileChanged","ProfileListChanged","SourceFilterListReindexed",
-        "SourceFilterCreated","SourceFilterRemoved","SourceFilterNameChanged","SourceFilterSettingsChanged",
-        "SourceFilterEnableStateChanged","ExitStarted","InputCreated","InputRemoved","InputNameChanged",
-        "InputSettingsChanged","InputActiveStateChanged","InputShowStateChanged","InputMuteStateChanged",
+        "CanvasCreated","CanvasRemoved","CanvasNameChanged","CurrentSceneCollectionChanging","CurrentSceneCollectionChanged",
+        "SceneCollectionListChanged","CurrentProfileChanging","CurrentProfileChanged","ProfileListChanged",
+        "SourceFilterListReindexed","SourceFilterCreated","SourceFilterRemoved","SourceFilterNameChanged",
+        "SourceFilterSettingsChanged","SourceFilterEnableStateChanged","ExitStarted","InputCreated","InputRemoved",
+        "InputNameChanged","InputSettingsChanged","InputActiveStateChanged","InputShowStateChanged","InputMuteStateChanged",
         "InputVolumeChanged","InputAudioBalanceChanged","InputAudioSyncOffsetChanged","InputAudioTracksChanged",
         "InputAudioMonitorTypeChanged","InputVolumeMeters","MediaInputPlaybackStarted","MediaInputPlaybackEnded",
         "MediaInputActionTriggered","StreamStateChanged","RecordStateChanged","RecordFileChanged","ReplayBufferStateChanged",
@@ -387,10 +393,10 @@
     });
 
     const websocketAllRequestTypes = {
-        "GetPersistentData":true,"SetPersistentData":true,"GetSceneCollectionList":false,"SetCurrentSceneCollection":true,
-        "CreateSceneCollection":true,"GetProfileList":false,"SetCurrentProfile":true,"CreateProfile":true,
-        "RemoveProfile":true,"GetProfileParameter":true,"SetProfileParameter":true,"GetVideoSettings":false,
-        "SetVideoSettings":true,"GetStreamServiceSettings":false,"SetStreamServiceSettings":true,
+        "GetCanvasList":false,"GetPersistentData":true,"SetPersistentData":true,"GetSceneCollectionList":false,
+        "SetCurrentSceneCollection":true,"CreateSceneCollection":true,"GetProfileList":false,"SetCurrentProfile":true,
+        "CreateProfile":true,"RemoveProfile":true,"GetProfileParameter":true,"SetProfileParameter":true,
+        "GetVideoSettings":false,"SetVideoSettings":true,"GetStreamServiceSettings":false,"SetStreamServiceSettings":true,
         "GetRecordDirectory":false,"SetRecordDirectory":true,"GetSourceFilterKindList":false,"GetSourceFilterList":true,
         "GetSourceFilterDefaultSettings":true,"CreateSourceFilter":true,"RemoveSourceFilter":true,
         "SetSourceFilterName":true,"GetSourceFilter":true,"SetSourceFilterIndex":true,"SetSourceFilterSettings":true,
@@ -415,7 +421,7 @@
         "CreateSceneItem":true,"RemoveSceneItem":true,"DuplicateSceneItem":true,"GetSceneItemTransform":true,
         "SetSceneItemTransform":true,"GetSceneItemEnabled":true,"SetSceneItemEnabled":true,"GetSceneItemLocked":true,
         "SetSceneItemLocked":true,"GetSceneItemIndex":true,"SetSceneItemIndex":true,"GetSceneItemBlendMode":true,
-        "SetSceneItemBlendMode":true,"GetSceneList":false,"GetGroupList":false,"GetCurrentProgramScene":false,
+        "SetSceneItemBlendMode":true,"GetSceneList":true,"GetGroupList":false,"GetCurrentProgramScene":false,
         "SetCurrentProgramScene":true,"GetCurrentPreviewScene":false,"SetCurrentPreviewScene":true,
         "CreateScene":true,"RemoveScene":true,"SetSceneName":true,"GetSceneSceneTransitionOverride":true,
         "SetSceneSceneTransitionOverride":true,"GetSourceActive":true,"GetSourceScreenshot":true,
@@ -633,6 +639,10 @@
     <dl class="message-properties">
         <dt class="optional">payload (configurable) <span class="property-type">string</span></dt>
         <dd>The scene name.</dd>
+    </dl>
+    <dl class="message-properties">
+        <dt class="optional">obs <span class="property-type">string</span></dt>
+        <dd>The node id of the config node to use for the request.</dd>
     </dl>
     <h3>Outputs</h3>
     <ol class="node-ports">
